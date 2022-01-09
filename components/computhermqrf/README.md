@@ -4,8 +4,8 @@
 This external component provides a way retrieve and control Computherm Q series thermostats. The RF receiver allows up to four individual devices. Existing devices can either be monitored as sensors or via manual pairing (in progress) you can add virtual zones that control the boiler separately.
 [Computherm Q8](https://computherm.info/en/digital_thermostats/computherm_q8rf)
 
-The communication with the RF receiver is accomplised via 868.35 MHz in a custom protocol originally decoded by @dexhun in his [Arduino library](https://github.com/denxhun/ComputhermRF).
-Inspiration and hardware design came from flogi in his [blog](https://flogi-diyiot.blog.hu/2021/10/13/rf868mhz_wifi_gateway_esp8266_rfm217w_rfm119w_computherm_q8rf) 
+The communication with the RF receiver is accomplised via 868.35 MHz in a custom protocol originally decoded by @denxhun in his [Arduino library](https://github.com/denxhun/ComputhermRF) and proposal of the reference hardware.
+Inspiration came from [flogi diyiot blog](https://flogi-diyiot.blog.hu/2021/10/13/rf868mhz_wifi_gateway_esp8266_rfm217w_rfm119w_computherm_q8rf).
 
 ## Configuration
 Communication with the device is done through a receiver and an transmitter module. They are not connected, so theoretically sensor and switch module works independently. 
