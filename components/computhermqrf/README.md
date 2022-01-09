@@ -86,4 +86,4 @@ It seens that the first 4 bytes are arbitrary and the last half byte is
 * zone 1 --> 0111 (...7)
 * zone 2 --> 1011 (...B)
 * zone 3 --> 0011 (...3)
-* zone 4 --> 1101 (...D have not checked)
+* zone 4 --> 1101 (...D)
