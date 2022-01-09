@@ -24,7 +24,7 @@ CONF_DESCRIPTION = "PIN"
 hex_uint20_t = hex_int_range(min=0, max=1048575)
 
 computhermqrf_ns = cg.esphome_ns.namespace("computhermqrf")
-ComputhermQRF = computhermqrf_ns.class_("ComputhermQRF", cg.Component) # TODO: PollingComponent
+ComputhermQRF = computhermqrf_ns.class_("ComputhermQRF", cg.PollingComponent)
 
 CONF_RECEIVER_PIN = "receiver_pin"
 CONF_TRANSMITTER_PIN = "transmitter_pin"
@@ -33,11 +33,12 @@ CONFIG_SCHEMA = cv.All(
         cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(ComputhermQRF),
-            cv.Optional(CONF_RECEIVER_PIN): pins.gpio_output_pin_schema, # TODO: check if inpit would be better
+            cv.Optional(CONF_RECEIVER_PIN): pins.gpio_input_pin_schema,
             cv.Optional(CONF_TRANSMITTER_PIN): pins.gpio_output_pin_schema,
         }
     )
-    .extend(cv.COMPONENT_SCHEMA),
+    .extend(cv.COMPONENT_SCHEMA)
+    .extend(cv.polling_component_schema("1s")),
     cv.has_at_least_one_key(CONF_RECEIVER_PIN, CONF_TRANSMITTER_PIN)
 )
 

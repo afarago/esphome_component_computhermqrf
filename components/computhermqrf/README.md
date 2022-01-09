@@ -17,9 +17,7 @@ The communication with the hardware is done using UART. Therefore you need to ha
 # Example configuration entry
 
 external_components:
-  - source:
-      type: local
-      path: esphome/components
+  - source: github://afarago/esphome_component_computhermqrf
     components: [ computhermqrf ]
 
 computhermqrf:

@@ -25,9 +25,7 @@ CONFIG_SCHEMA = cv.All(
         cv.Optional(
             CONF_ICON, default=ICON_THERMOMETER_LINES
         ): cv.icon
-    })
-    .extend(switch.SWITCH_SCHEMA)
-    .extend(cv.polling_component_schema("1s")),
+    }),
     validate_config
 )
 
@@ -39,7 +37,7 @@ async def to_code(config):
     cg.add(var.setName(config[CONF_NAME]))
     code_string = format(config[CONF_CODE], 'X')
     cg.add(var.setCode(code_string))
-    cg.add(hub.addZone(var))
+    cg.add(hub.addSwitch(var))
 
     # var = await binary_sensor.new_binary_sensor(config)
     # var = cg.new_Pvariable(config[CONF_ID], config[CONF_NAME])

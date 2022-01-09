@@ -37,4 +37,4 @@ async def to_code(config):
     cg.add(var.setName(config[CONF_NAME]))
     code_string = format(config[CONF_CODE], 'X')
     cg.add(var.setCode(code_string))
-    cg.add(hub.addZone(var))
+    cg.add(hub.addSensor(var))
