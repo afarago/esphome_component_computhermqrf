@@ -5,7 +5,7 @@
 
 #include "computhermqrf_helper.h"
 #include "computhermrf.h"
-#include "computhermqthermostat_binarysensorbase.h"
+#include "computhermqthermostat_baseunit.h"
 #include "computhermqthermostat_binarysensor.h"
 #include "computhermqthermostat_switch.h"
 #include "computhermqthermostat_pairingbutton.h"

@@ -13,15 +13,10 @@ namespace computhermqrf {
 
 static const char* TAG = "computhermqrf.switch";
 
-void ComputhermQThermostat_Switch::setState(bool state) {
-    ComputhermQThermostat_BinarySensorBase::setState(state);
-    this->publish_state(state);
-}
-
 void ComputhermQThermostat_Switch::write_state(bool state) {
     // This will be called every time the user requests a state change.
-    this->setState(state);
     this->setPendingMessage(this->getMessageBasedOnState());
+    this->publish_state(state);
 
     if (state) {
       this->last_turn_on_time_ = millis();
@@ -47,7 +42,7 @@ void ComputhermQThermostat_Switch::setPendingMessage(ComputhermRFMessage new_mes
 }
 
 ComputhermRFMessage ComputhermQThermostat_Switch::getMessageBasedOnState() {
-    return this->getState() ?  
+    return this->state ?  
             ComputhermRFMessage::heat_on : 
             ComputhermRFMessage::heat_off;
 }

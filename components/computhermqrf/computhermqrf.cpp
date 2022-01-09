@@ -1,7 +1,7 @@
 #include "esphome.h"
 
 #include "computhermrf.h"
-#include "computhermqthermostat_binarysensorbase.h"
+#include "computhermqthermostat_baseunit.h"
 #include "computhermqthermostat_binarysensor.h"
 #include "computhermqthermostat_switch.h"
 #include "computhermqrf.h"
@@ -83,7 +83,6 @@ void ComputhermQRF::setup() {
 
     #ifdef USE_API
     #ifdef USE_COMPUTHERMQRF_SWITCH
-    ESP_LOGD(TAG, "ComputhermQRF::setup regservice");
     // Register the pairing service
     register_service(&ComputhermQRF::on_pairing, "computhermqrf_pair");
     #endif
@@ -97,10 +96,12 @@ void ComputhermQRF::loop() {
 
         ComputhermQThermostat_BinarySensor* sensor = findbyid(msg.address.c_str());
         if (sensor) {
-            sensor->setState(ComputhermQ_isONOFF(msg.command.c_str()));
-            ESP_LOGD(TAG, "Message received - Registered - description: %s, state: %s", sensor->getName(), ComputhermQ_ONOFF(sensor->getState()));
+            sensor->publish_state(ComputhermQ_isONOFF(msg.command.c_str()));
+            ESP_LOGD(TAG, "Message received - Registered - description: %s, state: %s", 
+                sensor->getName(), ComputhermQ_ONOFF(sensor->state));
         } else {
-            ESP_LOGD(TAG, "Message received - Unregistered - thermostat: %s, command: %s", msg.address.c_str(), msg.command.c_str());
+            ESP_LOGD(TAG, "Message received - Unregistered - thermostat: %s, command: %s", 
+                msg.address.c_str(), msg.command.c_str());
         }
     }
     #endif
@@ -116,8 +117,8 @@ void ComputhermQRF::update() {
         // forced update and watchdog
         if (msg == ComputhermRFMessage::none) {
 
-            if (aswitch->getState() && has_elapsed(aswitch->getLastTurnOnTime(), aswitch->getTurnOnWatchdogInterval())) {
-                ESP_LOGD(TAG, "Turn on watchdog triggered, turning off switch.");
+            if (aswitch->state && has_elapsed(aswitch->getLastTurnOnTime(), aswitch->getTurnOnWatchdogInterval())) {
+                ESP_LOGD(TAG, "Turn_on_watchdog triggered, turning off switch.");
                 aswitch->write_state(false);
                 msg = aswitch->popPendingMessage();
             } 
@@ -168,7 +169,7 @@ void ComputhermQRF::send_msg(const char* code, ComputhermRFMessage msg) {
 }
 
 void ComputhermQRF::on_pairing() {
-    ESP_LOGI(TAG, "Start pairing all switches...");
+    ESP_LOGI(TAG, "Initiated pairing on all switches...");
     
     for(ComputhermQThermostat_Switch *aswitch : switches) {
         aswitch->setPendingMessage(ComputhermRFMessage::pairing);

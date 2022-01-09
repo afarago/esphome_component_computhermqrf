@@ -12,11 +12,6 @@ namespace computhermqrf {
 
 static const char* TAG = "computhermqrf.binarysensor";
 
-void ComputhermQThermostat_BinarySensor::setState(bool state) {
-    ComputhermQThermostat_BinarySensorBase::setState(state);
-    this->publish_state(state);
-}
-
 void ComputhermQThermostat_BinarySensor::dump_config() {
   ESP_LOGCONFIG(TAG, "ComputhermQThermostat_BinarySensor:");
   ESP_LOGCONFIG(TAG, "  code:'%s' name: '%s'", this->getCode(), this->getName());

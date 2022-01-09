@@ -6,13 +6,13 @@
 #ifdef USE_COMPUTHERMQRF_SWITCH
 
 #include "esphome/components/switch/switch.h"
-#include "computhermqthermostat_binarysensorbase.h"
+#include "computhermqthermostat_baseunit.h"
 
 namespace esphome {
 namespace computhermqrf {
 
 class ComputhermQThermostat_Switch : public switch_::Switch, public Component, 
-                                     public ComputhermQThermostat_BinarySensorBase {
+                                     public ComputhermQThermostat_BaseUnit {
   public:
     void setResendInterval(uint32_t interval) { this->config_resend_interval_ = interval; }
     uint32_t getResendInterval() { return this->config_resend_interval_; }
@@ -20,7 +20,6 @@ class ComputhermQThermostat_Switch : public switch_::Switch, public Component,
     uint32_t getTurnOnWatchdogInterval() { return this->config_turn_on_watchdog_interval_; }
 
     void dump_config() override;
-    void setState(bool state) override;
     void write_state(bool state) override;
 
     ComputhermRFMessage popPendingMessage();

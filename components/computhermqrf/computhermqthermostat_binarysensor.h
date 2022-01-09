@@ -7,14 +7,14 @@
 
 #include "esphome/components/binary_sensor/binary_sensor.h"
 
-#include "computhermqthermostat_binarysensorbase.h"
+#include "computhermqthermostat_baseunit.h"
 
 namespace esphome {
 namespace computhermqrf {
 
-class ComputhermQThermostat_BinarySensor : public binary_sensor::BinarySensor, public Component, public ComputhermQThermostat_BinarySensorBase {
+class ComputhermQThermostat_BinarySensor : public binary_sensor::BinarySensor, public Component, 
+                                           public ComputhermQThermostat_BaseUnit {
   public:
-    virtual void setState(bool state) override;
     void dump_config() override;
 };
 
