@@ -1,15 +1,15 @@
 #include "esphome.h"
 #include "esphome/core/component.h"
 #include "esphome/core/hal.h"
-#include "esphome/components/switch/switch.h"
 
+#ifdef USE_COMPUTHERMQRF_SWITCH
+
+#include "esphome/components/switch/switch.h"
 #include "computhermqrf_helper.h"
 #include "computhermqthermostat_switch.h"
 
 namespace esphome {
 namespace computhermqrf {
-
-#ifdef USE_COMPUTHERMQRF_SWITCH
 
 static const char* TAG = "computhermqrf.switch";
 
@@ -52,7 +52,7 @@ ComputhermRFMessage ComputhermQThermostat_Switch::getMessageBasedOnState() {
             ComputhermRFMessage::heat_off;
 }
 
-#endif 
+}
+}
 
-}
-}
+#endif

@@ -2,14 +2,14 @@
 
 #include "esphome/core/component.h"
 #include "esphome/core/hal.h"
-#include "esphome/components/switch/switch.h"
 
+#ifdef USE_COMPUTHERMQRF_SWITCH
+
+#include "esphome/components/switch/switch.h"
 #include "computhermqthermostat_binarysensorbase.h"
 
 namespace esphome {
 namespace computhermqrf {
-
-#ifdef USE_COMPUTHERMQRF_SWITCH
 
 class ComputhermQThermostat_Switch : public switch_::Switch, public Component, 
                                      public ComputhermQThermostat_BinarySensorBase {
@@ -40,7 +40,7 @@ class ComputhermQThermostat_Switch : public switch_::Switch, public Component,
     unsigned long last_msg_time_ = 0;
 };
 
-#endif
+}
+}
 
-}
-}
+#endif

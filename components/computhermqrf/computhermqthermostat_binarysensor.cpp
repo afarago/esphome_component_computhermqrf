@@ -1,14 +1,14 @@
 #include "esphome.h"
 #include "esphome/core/component.h"
 #include "esphome/core/hal.h"
-#include "esphome/components/binary_sensor/binary_sensor.h"
 
+#ifdef USE_COMPUTHERMQRF_BINARY_SENSOR
+
+#include "esphome/components/binary_sensor/binary_sensor.h"
 #include "computhermqthermostat_binarysensor.h"
 
 namespace esphome {
 namespace computhermqrf {
-
-#ifdef USE_COMPUTHERMQRF_BINARY_SENSOR
 
 static const char* TAG = "computhermqrf.binarysensor";
 
@@ -23,7 +23,7 @@ void ComputhermQThermostat_BinarySensor::dump_config() {
   LOG_BINARY_SENSOR("  ", "ComputhermQThermostat_BinarySensor", this);
 }
 
-#endif 
+}
+}
 
-}
-}
+#endif 

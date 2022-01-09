@@ -2,13 +2,14 @@
 
 #include "esphome/core/component.h"
 #include "esphome/core/hal.h"
+
+#ifdef USE_COMPUTHERMQRF_BUTTON_PAIR
+#ifdef USE_COMPUTHERMQRF_SWITCH
+
 #include "esphome/components/button/button.h"
 
 namespace esphome {
 namespace computhermqrf {
-
-#ifdef USE_COMPUTHERMQRF_BUTTON_PAIR
-#ifdef USE_COMPUTHERMQRF_SWITCH
 
 class ComputhermQThermostat_PairingButton : public button::Button, public Component {
   public:
@@ -22,8 +23,8 @@ class ComputhermQThermostat_PairingButton : public button::Button, public Compon
     std::function<void(void)> parent_callback;
 };
 
-#endif
-#endif
+}
+}
 
-}
-}
+#endif
+#endif
