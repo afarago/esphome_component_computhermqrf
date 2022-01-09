@@ -57,7 +57,33 @@ switch:
 - **pairing_mode** (*Optional*, boolean): Special pairing mode to add a new virtual zone, mode description [below](#pairing-a-new-virtual-zone).
 - All other options from [Switch](https://esphome.io/components/switch/index.html#config-switch).
 
+#### Auto turn off switch
 WARNING: while hardware thermostats will turn off heating by periodically monitoring the temperature the virtual appliance will not do so, therefore it is advised to to create and automation to turn it off automatically after a period of time or on HA or MQTT disconnect.   
+
+```yaml
+esphome:
+  ...
+  on_shutdown:
+    then:
+      - switch.turn_off: switch_zone3
+      - delay: 2s
+
+switch:
+  - platform: computhermqrf
+    name: "${systemName} Zone 3 extra"
+    code: 0x12343
+    id: switch_zone3
+    on_turn_on:
+      if:
+        condition:
+          for:
+            time: 30min
+            condition:
+              switch.is_on: switch_zone3
+        then:
+          - logger.log: Auto turn off switch_zone3
+          - switch.turn_off: switch_zone3
+```
 
 ## Hardware
 You need the following list of hardware
