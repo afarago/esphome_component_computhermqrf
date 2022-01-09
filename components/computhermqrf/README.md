@@ -52,7 +52,7 @@ switch:
 ### Switch
 - **code** (*Required*, string): Specify the 5 digit hex code associated with the zone.
 - **name** (*Optional*, string): Specify the zone name.
-- All other options from [Binary Sensor](https://esphome.io/components/switch/index.html#config-switch).
+- All other options from [Switch](https://esphome.io/components/switch/index.html#config-switch).
 
 ## Hardware
 You need the following list of hardware
@@ -83,7 +83,7 @@ The codes are randomly generated and assigned upon a pairing process. Without co
 
 For virtual zones used for switches you can come up with any arbitrary code.
 It seens that the first 4 bytes are arbitrary and the last half byte is
-* zone 1 --> 0111
-* zone 2 --> 1011
-* zone 3 --> 0011
-* zone 4 --> 1101 (have not checked)
+* zone 1 --> 0111 (...7)
+* zone 2 --> 1011 (...B)
+* zone 3 --> 0011 (...3)
+* zone 4 --> 1101 (...D have not checked)

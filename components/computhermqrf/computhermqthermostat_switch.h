@@ -11,8 +11,13 @@ namespace computhermqrf {
 
 class ComputhermQThermostat_Switch : public switch_::Switch, public Component, public ComputhermQThermostat_BinarySensorBase {
   public:
-    void dump_config() override;
+    enum Mode { normal, pairing };
 
+    void setPairingMode() { mode_ = Mode::pairing; }
+    bool getPairingMode() { return mode_ == Mode::pairing; }
+    void clearPairingMode() { mode_ = Mode::normal; }
+
+    void dump_config() override;
     void setState(bool state) override;
     void write_state(bool state) override;
 
@@ -22,6 +27,7 @@ class ComputhermQThermostat_Switch : public switch_::Switch, public Component, p
   private:
     bool has_pending_msg_ = false;
     bool pending_msg_ = false;
+    Mode mode_ = Mode::normal;
 };
 
 }

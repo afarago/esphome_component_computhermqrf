@@ -97,7 +97,11 @@ void ComputhermQRF::update() {
         }
         
         if (do_send) { 
-            this->send_msg(aswitch->getCode(), msg ? Message::heat_on : Message::heat_off);
+            this->send_msg(aswitch->getCode(), 
+                    !aswitch->getPairingMode() ? 
+                        ( msg ? Message::heat_on : Message::heat_off ) : 
+                        ( Message::pairing )
+                );
             last_msg_time_ = millis();
         }
     }
@@ -125,7 +129,7 @@ void ComputhermQRF::send_msg(const char* code, Message msg) {
         case Message::heat_off:
             rfhandler_rf->sendMessage(code, msg == Message::heat_on);
             break;
-        case Message::pair:
+        case Message::pairing:
             rfhandler_rf->pairAddress(code);
             break;
         default:

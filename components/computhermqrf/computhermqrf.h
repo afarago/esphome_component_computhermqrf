@@ -16,10 +16,10 @@ using namespace std;
 namespace esphome {
 namespace computhermqrf {
 
-enum Message { none, heat_on, heat_off, pair };
-
 class ComputhermQRF : public PollingComponent {
   public:
+    enum Message { none, heat_on, heat_off, pairing };
+
     void addSensor(ComputhermQThermostat_BinarySensor *sensor);
     void addSwitch(ComputhermQThermostat_Switch *aswitch);
 
