@@ -14,6 +14,7 @@ namespace computhermqrf {
 
 static const char* TAG = "computhermqrf";
 
+#ifdef USE_COMPUTHERMQRF_BINARY_SENSOR
 const char* ComputhermQRF::ComputhermQ_ONOFF(bool state) {
   return state ? "ON" : "OFF";
 }
@@ -21,33 +22,51 @@ const char* ComputhermQRF::ComputhermQ_ONOFF(bool state) {
 bool ComputhermQRF::ComputhermQ_isONOFF(const char *state) {
   return (strcmp(state,"ON")==0) ? 1 : 0;
 }
+#endif
 
-// static unsigned long calculate_diff(long now, long last_update) {  
-//   unsigned long diff = 0UL;
+#ifdef USE_COMPUTHERMQRF_SWITCH
+unsigned long ComputhermQRF::elapsed(unsigned long now, unsigned long last_update) {  
+  unsigned long diff = 0UL;
 
-//   if (last_update > now) {
-//     // millis() overflows every ~50 days
-//     diff = (ULONG_MAX - last_update) + now;
-//   } else {
-//     diff = now - last_update;
-//   }
-//   return diff;
-// }
+  if (last_update > now) {
+    // millis() overflows every ~50 days
+    diff = (ULONG_MAX - last_update) + now;
+  } else {
+    diff = now - last_update;
+  }
+  return diff;
+}
 
+bool ComputhermQRF::has_elapsed(unsigned long since, unsigned long threshold) {
+    return 
+        threshold>0 &&
+        ( elapsed(millis(), since) > threshold );
+}
+#endif
+
+#ifdef USE_COMPUTHERMQRF_BINARY_SENSOR
 void ComputhermQRF::addSensor(ComputhermQThermostat_BinarySensor *sensor) {
     sensors.push_back(sensor);
 }
+#endif
 
+#ifdef USE_COMPUTHERMQRF_SWITCH
 void ComputhermQRF::addSwitch(ComputhermQThermostat_Switch *aswitch) {
     switches.push_back(aswitch);
 }
 
-void ComputhermQRF::set_receiver_pin(InternalGPIOPin *receiver_pin) { 
-    receiver_pin_ = receiver_pin;
+#ifdef USE_COMPUTHERMQRF_BUTTON_PAIR
+void ComputhermQRF::setPairingButton(ComputhermQThermostat_PairingButton *button) {
+    this->pairing_button = button;
+
+    // add callback reference
+    this->pairing_button->setParentCallback([this](){
+        this->debug_id++;
+        this->on_pairing(); 
+    });
 }
-void ComputhermQRF::set_transmitter_pin(InternalGPIOPin *transmitter_pin) { 
-    transmitter_pin_ = transmitter_pin;
-}
+#endif
+#endif
 
 void ComputhermQRF::dump_config() {
   ESP_LOGCONFIG(TAG, "ComputhermQRF:");
@@ -60,13 +79,19 @@ void ComputhermQRF::setup() {
     rfhandler_rf = new ComputhermRF(
         receiver_pin_ ? receiver_pin_->get_pin() : 255, 
         transmitter_pin_ ? transmitter_pin_->get_pin() : 255);
-    ESP_LOGD(TAG, "receiver_pin_: %d, transmitter_pin_: %d",
-        receiver_pin_ ? receiver_pin_->get_pin() : 255, 
-        transmitter_pin_ ? transmitter_pin_->get_pin() : 255);
     rfhandler_rf->startReceiver();
+
+    #ifdef USE_API
+    #ifdef USE_COMPUTHERMQRF_SWITCH
+    ESP_LOGD(TAG, "ComputhermQRF::setup regservice");
+    // Register the pairing service
+    register_service(&ComputhermQRF::on_pairing, "computhermqrf_pair");
+    #endif
+    #endif
 }
 
 void ComputhermQRF::loop() {
+    #ifdef USE_COMPUTHERMQRF_BINARY_SENSOR
     if (rfhandler_rf->isDataAvailable()) {
         computhermMessage msg = rfhandler_rf->getData();
 
@@ -78,37 +103,38 @@ void ComputhermQRF::loop() {
             ESP_LOGD(TAG, "Message received - Unregistered - thermostat: %s, command: %s", msg.address.c_str(), msg.command.c_str());
         }
     }
+    #endif
 }
 
 void ComputhermQRF::update() {
-    bool force_send_all = ( calculate_diff(millis(), this->last_msg_time_) > this->config_resend_interval_ );
-
+    #ifdef USE_COMPUTHERMQRF_SWITCH
     for(ComputhermQThermostat_Switch *aswitch : switches) {
-        bool msg = false;
-        bool do_send = false;
-        if (aswitch->popPendingMessage(msg)) {
-            // clears pending message, indicate that sending is due
-            do_send = true;
-        } else {
-            if (force_send_all) { 
-                do_send = true;
-                msg = aswitch->getState(); 
-            }
-        }
         
-        if (do_send) { 
-            this->send_msg(aswitch->getCode(), 
-                    !aswitch->getPairingMode() ? 
-                        ( msg ? Message::heat_on : Message::heat_off ) : 
-                        ( Message::pairing )
-                );
-            last_msg_time_ = millis();
+        // priorized message handling
+        ComputhermRFMessage msg = aswitch->popPendingMessage();
+        
+        // forced update and watchdog
+        if (msg == ComputhermRFMessage::none) {
+
+            if (aswitch->getState() && has_elapsed(aswitch->getLastTurnOnTime(), aswitch->getTurnOnWatchdogInterval())) {
+                ESP_LOGD(TAG, "Turn on watchdog triggered, turning off switch.");
+                aswitch->write_state(false);
+                msg = aswitch->popPendingMessage();
+            } 
+            else if (has_elapsed(aswitch->getLastMsgTime(), aswitch->getResendInterval())) { 
+                msg = aswitch->getMessageBasedOnState();
+            }
+        }        
+
+        if (msg != ComputhermRFMessage::none) { 
+            this->send_msg(aswitch->getCode(), msg);
+            aswitch->setLastMsgTime(millis());
         }
     }
+    #endif
 }
 
-
-
+#ifdef USE_COMPUTHERMQRF_BINARY_SENSOR
 ComputhermQThermostat_BinarySensor *ComputhermQRF::findbyid(const char* device_sid) {
     for(ComputhermQThermostat_BinarySensor *sensor : sensors) {
         if (strcmp(sensor->getCode(), device_sid) == 0) {
@@ -117,38 +143,39 @@ ComputhermQThermostat_BinarySensor *ComputhermQRF::findbyid(const char* device_s
     }
     return NULL;
 }
+#endif
 
-void ComputhermQRF::send_msg(const char* code, Message msg) {
-    if (msg == Message::none) return;
+#ifdef USE_COMPUTHERMQRF_SWITCH
+void ComputhermQRF::send_msg(const char* code, ComputhermRFMessage msg) {
+    if (msg == ComputhermRFMessage::none) return;
 
     ESP_LOGD(TAG, "RF Sending message: 0x%02x for %s", msg, code);
 
     for (int i = 0; i < rf_repeat_count; i++) {
         switch (msg) {
-        case Message::heat_on:
-        case Message::heat_off:
-            rfhandler_rf->sendMessage(code, msg == Message::heat_on);
+        case ComputhermRFMessage::heat_on:
+        case ComputhermRFMessage::heat_off:
+            rfhandler_rf->sendMessage(code, msg == ComputhermRFMessage::heat_on);
             break;
-        case Message::pairing:
+        case ComputhermRFMessage::pairing:
             rfhandler_rf->pairAddress(code);
             break;
         default:
             break;
         }
+        yield();        
     }
 }
 
-unsigned long ComputhermQRF::calculate_diff(long now, long last_update) {  
-  unsigned long diff = 0UL;
-
-  if (last_update > now) {
-    // millis() overflows every ~50 days
-    diff = (ULONG_MAX - last_update) + now;
-  } else {
-    diff = now - last_update;
-  }
-  return diff;
+void ComputhermQRF::on_pairing() {
+    ESP_LOGI(TAG, "Start pairing all switches...");
+    
+    for(ComputhermQThermostat_Switch *aswitch : switches) {
+        aswitch->setPendingMessage(ComputhermRFMessage::pairing);
+        yield();
+    }
 }
+#endif
 
 }
 }

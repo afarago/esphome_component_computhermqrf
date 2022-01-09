@@ -3,10 +3,13 @@
 #include "esphome/core/hal.h"
 #include "esphome/components/switch/switch.h"
 
+#include "computhermqrf_helper.h"
 #include "computhermqthermostat_switch.h"
 
 namespace esphome {
 namespace computhermqrf {
+
+#ifdef USE_COMPUTHERMQRF_SWITCH
 
 static const char* TAG = "computhermqrf.switch";
 
@@ -18,29 +21,38 @@ void ComputhermQThermostat_Switch::setState(bool state) {
 void ComputhermQThermostat_Switch::write_state(bool state) {
     // This will be called every time the user requests a state change.
     this->setState(state);
-    this->setPendingMessage(state);
+    this->setPendingMessage(this->getMessageBasedOnState());
+
+    if (state) {
+      this->last_turn_on_time_ = millis();
+    }
 }
 
 void ComputhermQThermostat_Switch::dump_config() {
   ESP_LOGCONFIG(TAG, "ComputhermQThermostat_Switch:");
-  ESP_LOGCONFIG(TAG, "  code:'%s' name: '%s'", this->getCode(), this->getName());
+  ESP_LOGCONFIG(TAG, "  Code:'%s' Name: '%s'", this->getCode(), this->getName());
+  ESP_LOGCONFIG(TAG, "  Resend interval: %d ms", this->config_resend_interval_);
+  ESP_LOGCONFIG(TAG, "  Turn on watchdog interval: %d ms", this->config_turn_on_watchdog_interval_);
   LOG_SWITCH("  ", "ComputhermQThermostat_Switch", this);
 }
 
-bool ComputhermQThermostat_Switch::popPendingMessage(/*OUT*/ bool &message) {
-    if (this->has_pending_msg_) {
-        message = this->pending_msg_;
-        this->has_pending_msg_ = false;
-        return true;
-    } else {
-        return false;
-    }
+ComputhermRFMessage ComputhermQThermostat_Switch::popPendingMessage() {
+    ComputhermRFMessage msg = this->pending_msg_;    
+    this->pending_msg_ = ComputhermRFMessage::none;
+    return msg;
 }
 
-void ComputhermQThermostat_Switch::setPendingMessage(bool new_message) {
+void ComputhermQThermostat_Switch::setPendingMessage(ComputhermRFMessage new_message) {
     this->pending_msg_ = new_message;
-    this->has_pending_msg_ = true;
 }
+
+ComputhermRFMessage ComputhermQThermostat_Switch::getMessageBasedOnState() {
+    return this->getState() ?  
+            ComputhermRFMessage::heat_on : 
+            ComputhermRFMessage::heat_off;
+}
+
+#endif 
 
 }
 }

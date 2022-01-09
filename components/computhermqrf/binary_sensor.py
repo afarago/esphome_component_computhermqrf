@@ -6,7 +6,7 @@ from . import computhermqrf_ns, ComputhermQRF, CONF_ComputhermQRF_ID, hex_uint20
 
 DEPENDENCIES = ["computhermqrf"]
 
-ComputhermQRF_BinarySensor = computhermqrf_ns.class_("ComputhermQThermostat_BinarySensor", binary_sensor.BinarySensor)
+ComputhermQRF_BinarySensor = computhermqrf_ns.class_("ComputhermQThermostat_BinarySensor", binary_sensor.BinarySensor, cg.Component)
 
 def validate_config(config):
     # todo: sould not allow binary_sensor if receiver_pin is not registered
@@ -33,8 +33,12 @@ async def to_code(config):
     hub = await cg.get_variable(config[CONF_ComputhermQRF_ID])
 
     var = cg.new_Pvariable(config[CONF_ID])
+    await cg.register_component(var, config)
     await binary_sensor.register_binary_sensor(var, config)
+
     cg.add(var.setName(config[CONF_NAME]))
     code_string = format(config[CONF_CODE], 'X')
     cg.add(var.setCode(code_string))
+    
     cg.add(hub.addSensor(var))
+    cg.add_define("USE_COMPUTHERMQRF_BINARY_SENSOR")

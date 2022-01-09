@@ -12,9 +12,6 @@ Bunding into ESPHome was inspired by @nistvan86 in his [CC1101 hardware alternat
 ## Configuration
 Communication with the device is done through a receiver and an transmitter module. They are not connected, so theoretically sensor and switch module works independently. 
 
-
-The communication with the hardware is done using UART. Therefore you need to have an [UART bus](https://esphome.io/components/uart.html#uart) in your configuration with the `rx_pin` connected to the output of your hardware sensor component. The baud rate usually has to be set to 9600bps.
-
 ```yaml
 # Example configuration entry
 
@@ -28,16 +25,22 @@ computhermqrf:
 
 binary_sensor:
   - platform: computhermqrf
-    name: "${systemName} zone 1"
+    name: "Zone 1"
     code: 0x12347
   - platform: computhermqrf
-    name: "${systemName} zone 2"
+    name: "Zone 2"
     code: 0x1234B
 
 switch:
   - platform: computhermqrf
-    name: "${systemName} zone 3"
+    name: "Zone 3"
     code: 0x12343
+
+button:
+  - platform: computhermqrf
+    mode: "pair"
+    name: "Start pairing"
+
 ```
 
 ## Configuration variables
@@ -46,16 +49,24 @@ switch:
 - **receiver_pin** (*Optional*): Specify the receiver pin.
 - **transmitter_pin** (*Optional*): Specify the transmitter pin.
 
-### Binary Sensor
+### Binary Sensor - Computherm thermostat modules
 - **code** (*Required*, string): Specify the 5 digit hex code associated with the zone.
 - **name** (*Optional*, string): Specify the zone name.
 - All other options from [Binary Sensor](https://esphome.io/components/binary_sensor/index.html#config-binary_sensor).
 
-### Switch
+### Switch - Virtual Zones
 - **code** (*Required*, string): Specify the 5 digit hex code associated with the zone.
 - **name** (*Optional*, string): Specify the zone name.
-- **pairing_mode** (*Optional*, boolean): Special pairing mode to add a new virtual zone, mode description [below](#pairing-a-new-virtual-zone).
+- **turn_on_watchdog_interval** (*Optional*, [Time](https://esphome.io/guides/configuration-types.html#config-time)): Specify how long the switch can stay turned on after the last write_state call arrived for the switch component in milliseconds. This can be used for example in conjunction with the keep_alive setting of Home Assistant's generic thermostat component to add an additional safe guard against the crash of HA and to prevent excessive heating costs. 
+Defaults to 30 minutes.
+- **resend_interval** (*Optional*, [Time](https://esphome.io/guides/configuration-types.html#config-time)): Specify how often to repeat the last state in milliseconds. Since this is a simplex protocol, there's no response arriving from the receiver and we need to compensate for corrupt or lost messages by repeating them. 
+Defaults to 1 minute.
 - All other options from [Switch](https://esphome.io/components/switch/index.html#config-switch).
+
+### Button - Pairing 
+- **mode** (*Required*, string): must be "pair"
+- All other options from [Button](https://esphome.io/components/button/index.html#config-button).
+Special pairing mode to add a new virtual zone, mode description [below](#pairing-a-new-virtual-zone).
 
 #### Auto turn off switch
 WARNING: while hardware thermostats will turn off heating by periodically monitoring the temperature the virtual appliance will not do so, therefore it is advised to to create and automation to turn it off automatically after a period of time or on HA or MQTT disconnect.   
@@ -70,7 +81,26 @@ esphome:
 
 switch:
   - platform: computhermqrf
-    name: "${systemName} Zone 3 extra"
+    name: "Zone 3 extra"
+    code: 0x12343
+    id: switch_zone3
+    turn_on_watchdog_interval: 30min
+
+```
+
+OR
+
+```yaml
+esphome:
+  ...
+  on_shutdown:
+    then:
+      - switch.turn_off: switch_zone3
+      - delay: 2s
+
+switch:
+  - platform: computhermqrf
+    name: "Zone 3 extra"
     code: 0x12343
     id: switch_zone3
     on_turn_on:
@@ -124,17 +154,28 @@ Creating a virtual zone lets you take control of your boiler manually or via any
 
 Steps:
 1. Come up with any arbitrary code -hopefully not used by the neighbours- taking into consideration which zone you wish to pair and control.
-   In our example we will use zone 4 and our code will be 0x1111D) 
-2. Add a new switch to the configuration with ```pairing_mode: true``` and upload.
-    ```yaml
-    switch:
-      - platform: computhermqrf
-        name: "${systemName} Zone 4 extra pairing"
-        code: 0x1111D
-        pairing_mode: true
-    ```
-4. On the Q7RF/Q8RF receiver long press the desired zone button, so it will start blinking
-5. Using the web UI simply turn on the switch - this will start the pairing and the RF receiver will learn the zone code and immediately stop blinking.
-6. Remove ```pairing_mode: true``` from the config and recompile and upload.
+In our example we will use zone 4 and our code will be 0x1111D) 
+  1. Not using HomeAssistant
+    1. Add a new pairing button to the configuration and upload.
+        ```yaml
+        switch:
+          - platform: computhermqrf
+            name: "Zone 4 extra pairing"
+            code: 0x1111D
+            pairing_mode: true
+
+        button:
+          - platform: computhermqrf
+            mode: "pair"
+            name: "Start pairing"
+        ```
+    2. On the Q8RF receiver long press the desired zone button, so it will start blinking
+    3. Using the web UI simply push the pairing button.
+        This will start the pairing and the RF receiver will learn the zone code and immediately stop blinking.
+    4. (Optional) You can remove pairing button from the config and recompile and upload.
+  1. Using HomeAssistant
+    1. On the Q8RF receiver long press the desired zone button, so it will start blinking
+    2. Go to Home Assistant's _Developer tools → Services_ and select the service ESPHome: <NODE_NAME>_computhermqrf_pair
+        This will start the pairing and the RF receiver will learn the zone code and immediately stop blinking.
 
 Refer to the [Q8RF manual](https://computherm.info/sites/default/files/Q8RF-Manual-EN.pdf) for the pairing process, "9.2 Putting the receiver unit into operation".

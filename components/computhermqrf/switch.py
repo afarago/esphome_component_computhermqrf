@@ -8,10 +8,11 @@ from . import computhermqrf_ns, ComputhermQRF, CONF_ComputhermQRF_ID, hex_uint20
 
 DEPENDENCIES = ["computhermqrf"]
 
-ComputhermQRF_Switch = computhermqrf_ns.class_("ComputhermQThermostat_Switch", switch.Switch)
+ComputhermQRF_Switch = computhermqrf_ns.class_("ComputhermQThermostat_Switch", switch.Switch, cg.Component)
 
-CONF_PAIRING_MODE = "pairing_mode" 
 ICON_THERMOMETER_LINES = "mdi:thermometer-lines"
+CONF_TURN_ON_WATCHDOG_INTERVAL = "turn_on_watchdog_interval"
+CONF_RESEND_INTERVAL = "resend_interval"
 
 def validate_config(config):
     # todo: sould not allow switch if transmitter_pin is not registered
@@ -24,7 +25,8 @@ CONFIG_SCHEMA = cv.All(
         cv.GenerateID(CONF_ComputhermQRF_ID): cv.use_id(ComputhermQRF),
         cv.Required(CONF_CODE): cv.templatable(hex_uint20_t),
         # cv.Required(CONF_CODE): cv.string,
-        cv.Optional(CONF_PAIRING_MODE): cv.boolean,
+        cv.Optional(CONF_TURN_ON_WATCHDOG_INTERVAL, default="30min"): cv.positive_time_period_milliseconds,
+        cv.Optional(CONF_RESEND_INTERVAL, default="1min"): cv.positive_time_period_milliseconds,
         cv.Optional(
             CONF_ICON, default=ICON_THERMOMETER_LINES
         ): cv.icon
@@ -36,17 +38,18 @@ async def to_code(config):
     hub = await cg.get_variable(config[CONF_ComputhermQRF_ID])
 
     var = cg.new_Pvariable(config[CONF_ID])
+    await cg.register_component(var, config)
     await switch.register_switch(var, config)
-    if (CONF_PAIRING_MODE in config and config[CONF_PAIRING_MODE]):
-        cg.add(var.setPairingMode())
+
     cg.add(var.setName(config[CONF_NAME]))
     code_string = format(config[CONF_CODE], 'X')
     cg.add(var.setCode(code_string))
+    
+    if (CONF_TURN_ON_WATCHDOG_INTERVAL in config):
+        cg.add(var.setTurnOnWatchdogInterval(config[CONF_TURN_ON_WATCHDOG_INTERVAL]))
+    if (CONF_RESEND_INTERVAL in config):
+        cg.add(var.setResendInterval(config[CONF_RESEND_INTERVAL]))
+        
     cg.add(hub.addSwitch(var))
+    cg.add_define("USE_COMPUTHERMQRF_SWITCH")
 
-    # var = await binary_sensor.new_binary_sensor(config)
-    # var = cg.new_Pvariable(config[CONF_ID], config[CONF_NAME])
-    # cg.add(cg.App.register_binary_sensor(var))
-    # await setup_binary_sensor_core_(var, config)
-    # func = getattr(hub, DIRECTIONS[config[CONF_DIRECTION]])
-    # cg.add(func(var))
