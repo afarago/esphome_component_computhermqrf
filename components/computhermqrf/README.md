@@ -7,6 +7,8 @@ This external component provides a way retrieve and control Computherm Q series 
 The communication with the RF receiver is accomplised via 868.35 MHz in a custom protocol originally decoded by @denxhun in his [Arduino library](https://github.com/denxhun/ComputhermRF) and proposal of the reference hardware.
 Inspiration came from [flogi diyiot blog](https://flogi-diyiot.blog.hu/2021/10/13/rf868mhz_wifi_gateway_esp8266_rfm217w_rfm119w_computherm_q8rf).
 
+Bunding into ESPHome was inspired by @nistvan86 in his [CC1101 hardware alternative](https://github.com/nistvan86/esphome-q7rf).
+
 ## Configuration
 Communication with the device is done through a receiver and an transmitter module. They are not connected, so theoretically sensor and switch module works independently. 
 
@@ -52,7 +54,10 @@ switch:
 ### Switch
 - **code** (*Required*, string): Specify the 5 digit hex code associated with the zone.
 - **name** (*Optional*, string): Specify the zone name.
+- **pairing_mode** (*Optional*, boolean): Special pairing mode to add a new virtual zone, mode description [below](#pairing-a-new-virtual-zone).
 - All other options from [Switch](https://esphome.io/components/switch/index.html#config-switch).
+
+WARNING: while hardware thermostats will turn off heating by periodically monitoring the temperature the virtual appliance will not do so, therefore it is advised to to create and automation to turn it off automatically after a period of time or on HA or MQTT disconnect.   
 
 ## Hardware
 You need the following list of hardware
@@ -87,3 +92,23 @@ It seens that the first 4 bytes are arbitrary and the last half byte is
 * zone 2 --> 1011 (...B)
 * zone 3 --> 0011 (...3)
 * zone 4 --> 1101 (...D)
+
+## Pairing a new virtual zone
+Creating a virtual zone lets you take control of your boiler manually or via any automation through an ESPHome Switch component.
+
+Steps:
+1. Come up with any arbitrary code -hopefully not used by the neighbours- taking into consideration which zone you wish to pair and control.
+   In our example we will use zone 4 and our code will be 0x1111D) 
+2. Add a new switch to the configuration with ```pairing_mode: true``` and upload.
+    ```yaml
+    switch:
+      - platform: computhermqrf
+        name: "${systemName} Zone 4 extra pairing"
+        code: 0x1111D
+        pairing_mode: true
+    ```
+4. On the Q7RF/Q8RF receiver long press the desired zone button, so it will start blinking
+5. Using the web UI simply turn on the switch - this will start the pairing and the RF receiver will learn the zone code and immediately stop blinking.
+6. Remove ```pairing_mode: true``` from the config and recompile and upload.
+
+Refer to the [Q8RF manual](https://computherm.info/sites/default/files/Q8RF-Manual-EN.pdf) for the pairing process, "9.2 Putting the receiver unit into operation".
