@@ -66,10 +66,11 @@ Defaults to 1 minute.
 ### Button - Pairing 
 - **mode** (*Required*, string): must be "pair"
 - All other options from [Button](https://esphome.io/components/button/index.html#config-button).
-Special pairing mode to add a new virtual zone, mode description [below](#pairing-a-new-virtual-zone).
 
-#### Auto turn off switch
-WARNING: while hardware thermostats will turn off heating by periodically monitoring the temperature the virtual appliance will not do so, therefore it is advised to to create and automation to turn it off automatically after a period of time or on HA or MQTT disconnect.   
+Special pairing button and service to add a new virtual zone with details [below](#pairing-a-new-virtual-zone).
+
+### Warning: Auto turn off switch
+While hardware thermostats will turn off heating by periodically monitoring the temperature the virtual appliance will not do so, therefore it is advised to to create and automation to turn it off automatically after a period of time or on HA or MQTT disconnect.   
 
 ```yaml
 esphome:
