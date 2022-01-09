@@ -155,8 +155,14 @@ Creating a virtual zone lets you take control of your boiler manually or via any
 
 Steps:
 1. Come up with any arbitrary code -hopefully not used by the neighbours- taking into consideration which zone you wish to pair and control.
-In our example we will use zone 4 and our code will be 0x1111D) 
-  1. Not using HomeAssistant
+In our example we will use zone 4 and our code will be 0x1111D.
+
+2. Using HomeAssistant
+    1. On the Q8RF receiver long press the desired zone button, so it will start blinking
+    2. Go to Home Assistant's _Developer tools → Services_ and select the service ESPHome: <NODE_NAME>_computhermqrf_pair .
+    This will start the pairing and the RF receiver will learn the zone code and immediately stop blinking.
+
+3. Not using HomeAssistant
     1. Add a new pairing button to the configuration and upload.
         ```yaml
         switch:
@@ -171,12 +177,7 @@ In our example we will use zone 4 and our code will be 0x1111D)
             name: "Start pairing"
         ```
     2. On the Q8RF receiver long press the desired zone button, so it will start blinking
-    3. Using the web UI simply push the pairing button.
-        This will start the pairing and the RF receiver will learn the zone code and immediately stop blinking.
+    3. Using the web UI simply push the pairing button. This will start the pairing and the RF receiver will learn the zone code and immediately stop blinking.
     4. (Optional) You can remove pairing button from the config and recompile and upload.
-  1. Using HomeAssistant
-    1. On the Q8RF receiver long press the desired zone button, so it will start blinking
-    2. Go to Home Assistant's _Developer tools → Services_ and select the service ESPHome: <NODE_NAME>_computhermqrf_pair
-        This will start the pairing and the RF receiver will learn the zone code and immediately stop blinking.
 
 Refer to the [Q8RF manual](https://computherm.info/sites/default/files/Q8RF-Manual-EN.pdf) for the pairing process, "9.2 Putting the receiver unit into operation".
