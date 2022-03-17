@@ -21,7 +21,7 @@ CONFIG_SCHEMA = cv.All(
         # cv.Required(CONF_CODE): cv.string,
         cv.Optional(
             CONF_DEVICE_CLASS, default=DEVICE_CLASS_RUNNING
-        ): binary_sensor.device_class,
+        ): binary_sensor.validate_device_class,
         cv.Optional(
             CONF_ICON, default=ICON_THERMOMETER
         ): cv.icon
