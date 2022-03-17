@@ -15,8 +15,8 @@ static const char* TAG = "computhermqrf.switch";
 
 void ComputhermQThermostat_Switch::write_state(bool state) {
     // This will be called every time the user requests a state change.
-    this->setPendingMessage(this->getMessageBasedOnState());
     this->publish_state(state);
+    this->setPendingMessage(this->getMessageBasedOnState());
 
     if (state) {
       this->last_turn_on_time_ = millis();

@@ -120,7 +120,7 @@ void ComputhermQRF::update() {
             if (aswitch->state && has_elapsed(aswitch->getLastTurnOnTime(), aswitch->getTurnOnWatchdogInterval())) {
                 ESP_LOGD(TAG, "Turn_on_watchdog triggered, turning off switch.");
                 aswitch->write_state(false);
-                msg = aswitch->popPendingMessage();
+                msg = aswitch->popPendingMessage(); // as ComputhermQThermostat_Switch::write_state pushes a message based on the state
             } 
             else if (has_elapsed(aswitch->getLastMsgTime(), aswitch->getResendInterval())) { 
                 msg = aswitch->getMessageBasedOnState();
@@ -164,7 +164,7 @@ void ComputhermQRF::send_msg(const char* code, ComputhermRFMessage msg) {
         default:
             break;
         }
-        yield();        
+        yield();
     }
 }
 

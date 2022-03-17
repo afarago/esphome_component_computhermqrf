@@ -103,9 +103,9 @@ void ComputhermRF::_sendMessage(String address, bool on, bool normal_padding) {
         _sendHalfByte(address[k]);
       }
 	  //COMMAND: 4+4 bits
-	  //TURN_ON_HEATING = 0xFF --> 00
-	  //TURN_OFF_HEATING = 0x0F --> F0
-	  //PAIR = 0x00 --> FF
+	  //(CClib: TURN_ON_HEATING = 0xFF) --> "00" to send
+	  //(CClib:TURN_OFF_HEATING = 0x0F) --> "F0" to send
+	  //(CClib:PAIR = 0x00) --> "FF" to send
       if (on) {
         _sendHalfByte('0');  // ON
       } else {
