@@ -20,14 +20,14 @@ CODEOWNERS = ["@afarago"]
 AUTO_LOAD = ["binary_sensor", "switch"]
 
 CONF_ComputhermQRF_ID = "ComputhermQRF_id"
-CONF_DESCRIPTION = "PIN"
+CONF_ABBREVIATION = "abbreviation"
+CONF_RECEIVER_PIN = "receiver_pin"
+CONF_TRANSMITTER_PIN = "transmitter_pin"
 hex_uint20_t = hex_int_range(min=0, max=1048575)
 
 computhermqrf_ns = cg.esphome_ns.namespace("computhermqrf")
 ComputhermQRF = computhermqrf_ns.class_("ComputhermQRF", cg.PollingComponent)
 
-CONF_RECEIVER_PIN = "receiver_pin"
-CONF_TRANSMITTER_PIN = "transmitter_pin"
 
 CONFIG_SCHEMA = cv.All(
         cv.Schema(

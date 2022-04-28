@@ -52,46 +52,55 @@ void ComputhermRF::stopReceiver() {
 bool ComputhermRF::isDataAvailable() {
   return _avail;
 }
-void ComputhermRF::getData(String &id, bool &on) {
-    computhermMessage result = getData();
-    id = result.address;
-    on = (result.command == "ON");
-}
+// void ComputhermRF::getData(String &id, bool &on) {
+//     computhermMessage result = getData();
+//     id = result.address;
+//     on = (result.command == "ON");
+// }
 computhermMessage ComputhermRF::getData() {
   computhermMessage result;
-  String a = "     ";
+
+  result.addr = 0;
+  // String a = "     ";
   uint8_t n = 0;
   for (int i = 0; i < 5; i++) {
+    if (i) result.addr <<= 4;
     for (int j = 0; j < 4; j++) {
       for (int j = 0; j < 4; j++) {
         if (_buff[i*4+j] == 1) {
           n |= 1 << (3-j);
         }
       }
-      a[i] = _toHex(n);
+      // a[i] = _toHex(n);
+      result.addr |= n & 0xF;
       n = 0;
     }
   }
-  result.address = a;
-  String c = "";
+  // result.address = a;
+  // String c = "";
   if (_buff[20] == 0 && _buff[21] == 0 && _buff[22] == 0 && _buff[23] == 0) {
-    c = "ON";
+    // c = "ON";
+    result.on = true;
   } else {
-    c = "OFF";
+    // c = "OFF";
+    result.on = false;
   }
-  result.command = c;
+  // result.command = c;
   _avail = false;
   return result;
 }
-void ComputhermRF::sendMessage(computhermMessage message) {
-  sendMessage(message.address, message.command == "ON");
-}
-void ComputhermRF::sendMessage(String address, bool on) {
+// void ComputhermRF::sendMessage(computhermMessage message) {
+//   sendMessage(message.address, message.command == "ON");
+// }
+void ComputhermRF::sendMessage(unsigned long address, bool on) {
   _sendMessage(address, on, true);
 }
-void ComputhermRF::_sendMessage(String address, bool on, bool normal_padding) {
-  if (address.length() != 5)
-    return;
+// void ComputhermRF::_sendMessage(String address, bool on, bool normal_padding) {
+//   if (address.length() != 5)
+//     return;
+//   //!! _sendMessage(address_numeric, on, normal_padding);
+// }
+void ComputhermRF::_sendMessage(unsigned long address, bool on, bool normal_padding) {
   _wakeUpTransmitter();
   stopReceiver();
   for (int i = 0; i < 8; i++) {
@@ -100,28 +109,36 @@ void ComputhermRF::_sendMessage(String address, bool on, bool normal_padding) {
       //16+8 bits
 	  //CHECK if address last halfbyte is 8?
 	  for (int k = 0; k < 5; k++) {
-        _sendHalfByte(address[k]);
-      }
-	  //COMMAND: 4+4 bits
+      // 0x56789 -> 5,6,7,8,9 
+      byte hb = (address>>(5-1-k)*4) & 0xF;
+      // _sendHalfByte(address[k]);
+      _sendHalfByte(hb);
+    }
+	  
+    //COMMAND: 4+4 bits
 	  //(CClib: TURN_ON_HEATING = 0xFF) --> "00" to send
 	  //(CClib:TURN_OFF_HEATING = 0x0F) --> "F0" to send
 	  //(CClib:PAIR = 0x00) --> "FF" to send
       if (on) {
-        _sendHalfByte('0');  // ON
+        //_sendHalfByte('0');  // ON
+        _sendHalfByte(0x0);  // ON
       } else {
-        _sendHalfByte('F');  // OFF
+        // _sendHalfByte('F');  // OFF
+        _sendHalfByte(0xF);  // OFF
       }
       if (normal_padding) {
-        _sendHalfByte('0');  // default padding for ON/OFF - ON
+        // _sendHalfByte('0');  // default padding for ON/OFF - ON
+        _sendHalfByte(0x0);  // default padding for ON/OFF - ON
       } else {
-        _sendHalfByte('F');  // padding for pairing - OFF
+        // _sendHalfByte('F');  // padding for pairing - OFF
+        _sendHalfByte(0xF);  // padding for pairing - OFF
       }
     }
     _sendStop();
   }
   startReceiver();
 }
-void ComputhermRF::pairAddress(String address) {
+void ComputhermRF::pairAddress(unsigned long address) {
 // send FF for pairing
   _sendMessage(address, false, false); 
 }
@@ -162,25 +179,30 @@ void ComputhermRF::_sendBit(bool bit) {
     _sendPulse(2, 1); //001
   }
 }
-void ComputhermRF::_sendHalfByte(char ch) {
-  uint8_t num = 0;
-  if (ch >= '0' && ch <= '9') {
-    num = ch - '0';
-  } else {
-    if (ch >= 'a' && ch <= 'f') {
-      num = ch - 'a' + 10;
-    } else {
-      if (ch >= 'A' && ch <= 'F') {
-        num = ch - 'A' + 10;
-      } else {
-        return;
-      }
-    }
-  }
+// void ComputhermRF::_sendHalfByte(char ch) {
+//   uint8_t num = 0;
+//   if (ch >= '0' && ch <= '9') {
+//     num = ch - '0';
+//   } else {
+//     if (ch >= 'a' && ch <= 'f') {
+//       num = ch - 'a' + 10;
+//     } else {
+//       if (ch >= 'A' && ch <= 'F') {
+//         num = ch - 'A' + 10;
+//       } else {
+//         return;
+//       }
+//     }
+//   }
+//   _sendHalfByte(num);
+// }
+
+void ComputhermRF::_sendHalfByte(byte num) {
   for (int i = 0; i < 4; i++) {
     _sendBit(num & 1 << (3-i));
   }
 }
+
 bool ComputhermRF::_isRepeat() {
   bool result = false;
   for (int i = 0; i < _buffEnd; i++) {
@@ -230,10 +252,10 @@ void ICACHE_RAM_ATTR ComputhermRF::_handler() {
     }
   }
 }
-char ComputhermRF::_toHex(uint8_t num) {
-  if (num < 10) {
-    return '0' + num;
-  } else {
-    return 'A' + (num - 10);
-  }
-}
+// char ComputhermRF::_toHex(uint8_t num) {
+//   if (num < 10) {
+//     return '0' + num;
+//   } else {
+//     return 'A' + (num - 10);
+//   }
+// }

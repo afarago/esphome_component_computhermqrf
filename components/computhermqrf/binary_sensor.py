@@ -2,7 +2,10 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import binary_sensor
 from esphome.const import CONF_DEVICE_CLASS, DEVICE_CLASS_RUNNING, CONF_ID, CONF_CODE, CONF_NAME, CONF_ICON, ICON_THERMOMETER
-from . import computhermqrf_ns, ComputhermQRF, CONF_ComputhermQRF_ID, hex_uint20_t
+from . import (
+    computhermqrf_ns, ComputhermQRF, CONF_ComputhermQRF_ID, hex_uint20_t,
+    CONF_ABBREVIATION
+)
 
 DEPENDENCIES = ["computhermqrf"]
 
@@ -19,6 +22,7 @@ CONFIG_SCHEMA = cv.All(
         cv.GenerateID(CONF_ComputhermQRF_ID): cv.use_id(ComputhermQRF),
         cv.Required(CONF_CODE): hex_uint20_t,
         # cv.Required(CONF_CODE): cv.string,
+        cv.Optional(CONF_ABBREVIATION): cv.string,
         cv.Optional(
             CONF_DEVICE_CLASS, default=DEVICE_CLASS_RUNNING
         ): binary_sensor.validate_device_class,
@@ -37,8 +41,11 @@ async def to_code(config):
     await binary_sensor.register_binary_sensor(var, config)
 
     cg.add(var.setName(config[CONF_NAME]))
-    code_string = format(config[CONF_CODE], 'X')
-    cg.add(var.setCode(code_string))
+    # code_string = format(config[CONF_CODE], 'X')
+    # cg.add(var.setCode(code_string))
+    cg.add(var.setCode(config[CONF_CODE]))
+    if CONF_ABBREVIATION in config:
+        cg.add(var.setAbbreviation(config[CONF_ABBREVIATION]))
     
     cg.add(hub.addSensor(var))
     cg.add_define("USE_COMPUTHERMQRF_BINARY_SENSOR")

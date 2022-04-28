@@ -7,6 +7,7 @@
 #include "computhermqrf.h"
 
 #include <vector>
+#include <map>
 using namespace std;
 
 namespace esphome {
@@ -69,9 +70,12 @@ void ComputhermQRF::setPairingButton(ComputhermQThermostat_PairingButton *button
 #endif
 
 void ComputhermQRF::dump_config() {
-  ESP_LOGCONFIG(TAG, "ComputhermQRF:");
-  LOG_PIN("  Receiver Pin: ", this->receiver_pin_);
-  LOG_PIN("  Transmitter Pin: ", this->transmitter_pin_);
+    ESP_LOGCONFIG(TAG, "ComputhermQRF:");
+    LOG_PIN("  Receiver Pin: ", this->receiver_pin_);
+    LOG_PIN("  Transmitter Pin: ", this->transmitter_pin_);
+    #ifdef USE_COMPUTHERMQRF_UNREGISTERED_ADDR_TEXT_SENSOR
+    LOG_TEXT_SENSOR("  ", "Last Unregistered Address", this->last_unregistered_address_text_sensor_);
+    #endif
 }
 
 void ComputhermQRF::setup() {
@@ -90,21 +94,77 @@ void ComputhermQRF::setup() {
 }
 
 void ComputhermQRF::loop() {
-    #ifdef USE_COMPUTHERMQRF_BINARY_SENSOR
     if (rfhandler_rf->isDataAvailable()) {
         computhermMessage msg = rfhandler_rf->getData();
 
-        ComputhermQThermostat_BinarySensor* sensor = findbyid(msg.address.c_str());
+        ComputhermQThermostat_BinarySensor* sensor = find_closest_by_id(msg.addr);
         if (sensor) {
-            sensor->publish_state(ComputhermQ_isONOFF(msg.command.c_str()));
-            ESP_LOGD(TAG, "Message received - Registered - description: %s, state: %s", 
-                sensor->getName(), ComputhermQ_ONOFF(sensor->state));
-        } else {
-            ESP_LOGD(TAG, "Message received - Unregistered - thermostat: %s, command: %s", 
-                msg.address.c_str(), msg.command.c_str());
+            // find closest - if not found, display hamming distance 56789 => 567>79
+            #ifdef USE_COMPUTHERMQRF_BINARY_SENSOR
+            if (sensor->getCode()==msg.addr) {
+                sensor->publish_state(msg.on);
+                ESP_LOGD(TAG, "Message received - Registered - description: %s, state: %s", 
+                    sensor->getName(), ComputhermQ_ONOFF(sensor->state));
+            } else 
+            #endif
+            {
+                unsigned long closest_addr = sensor->getCode();
+ 
+                // Compute decorated address / error string 0x56789 -> 0x56789< 0xA<678B<
+                char erraddr_buf[12]; // max 5+5=10  chars including error display chars, +1 for initial separator, +1 zero 
+                uint8_t idx = 0;
+                erraddr_buf[idx++] = ':'; // initial separator
+                for(int k = 0; k < 5; k++) {
+                    uint8_t hb_receivd = (msg.addr>>(5-1-k)*4) & 0xF;
+                    uint8_t hb_closest = (closest_addr>>(5-1-k)*4) & 0xF;
+
+                    erraddr_buf[idx++] = hb_receivd<10 ? ('0'+hb_receivd) : ('a'+(hb_receivd-10));
+                    if (hb_receivd!=hb_closest)
+                        erraddr_buf[idx++] = '<';
+                }
+                erraddr_buf[idx] = '\0';
+
+                // adding abbreviation 
+                std::string erraddr = std::string(sensor->getAbbreviation()) + std::string(erraddr_buf);
+
+                ESP_LOGD(TAG, "Message received - Unregistered - thermostat: %lx (%s), command: %d", msg.addr, erraddr.c_str(), msg.on);
+                // ESP_LOGD(TAG, "Message received - Unregistered - thermostat: %s, command: %s", 
+                //     msg.address.c_str(), msg.command.c_str());
+
+                //TODO: create type for computherm_unit_addr
+
+                #ifdef USE_COMPUTHERMQRF_UNREGISTERED_ADDR_TEXT_SENSOR
+                // Handle unregistered address list and sensor
+                //auto it = std::find(unknown_unit_ids.begin(), unknown_unit_ids.end(), msg.addr);
+                auto it = std::find_if(unknown_unit_ids.begin(), unknown_unit_ids.end(), 
+                    [&msg](const std::tuple<unsigned long, std::string>& x) { return std::get<0>(x) == msg.addr;});
+                
+                if (it!=unknown_unit_ids.end())
+                    unknown_unit_ids.erase(it);
+                //snprintf(erraddr_buf, 11, "!%lx", msg.addr);
+                unknown_unit_ids.push_front(std::make_tuple(msg.addr, erraddr));
+
+                // limit max number of storage to 10
+                if (unknown_unit_ids.size()>max_unregistered_address_to_store)
+                    unknown_unit_ids.resize(max_unregistered_address_to_store);
+
+                // publish to text sensor
+                std::string result;
+                // for (std::pair<std::string, long> element : unknown_unit_ids) {
+                // std::string s = std::accumulate(v.begin(), v.end(), std::string{});
+                for (auto it = unknown_unit_ids.begin(); it != unknown_unit_ids.end(); ++it) {
+                    if (it != unknown_unit_ids.begin())
+                        result += " ";
+                    //char buf[6]; snprintf( buf, 6, "%05lx", *it);
+                    // result += buf;
+                    result += std::get<1>(*it);
+                }
+
+                this->publish_sensor_state_(this->last_unregistered_address_text_sensor_, result);
+                #endif // USE_COMPUTHERMQRF_UNREGISTERED_ADDR_TEXT_SENSOR
+            }
         }
     }
-    #endif
 }
 
 void ComputhermQRF::update() {
@@ -136,21 +196,37 @@ void ComputhermQRF::update() {
 }
 
 #ifdef USE_COMPUTHERMQRF_BINARY_SENSOR
-ComputhermQThermostat_BinarySensor *ComputhermQRF::findbyid(const char* device_sid) {
+ComputhermQThermostat_BinarySensor *ComputhermQRF::find_closest_by_id(unsigned long device_id) {
+    ComputhermQThermostat_BinarySensor *closest = NULL;
+    int closest_distance = 99;
     for(ComputhermQThermostat_BinarySensor *sensor : sensors) {
-        if (strcmp(sensor->getCode(), device_sid) == 0) {
-            return sensor;
+        if (sensor->getCode() == device_id) {
+            closest = sensor;
+            closest_distance = 0;
+            break;
+        } else {
+            // check hamming distance
+            unsigned long temp = sensor->getCode() ^ device_id; // store the XOR output in result variable
+            int distance=0;
+            while(temp>0) {
+                distance+=temp & 1;    // storing the count of different bit
+                temp>>=1;              // right shift by 1
+            }
+            if (distance<closest_distance) {
+                closest_distance = distance;
+                closest = sensor;
+            }
         }
     }
-    return NULL;
+    return closest;
 }
 #endif
 
 #ifdef USE_COMPUTHERMQRF_SWITCH
-void ComputhermQRF::send_msg(const char* code, ComputhermRFMessage msg) {
+void ComputhermQRF::send_msg(unsigned long code, ComputhermRFMessage msg) {
     if (msg == ComputhermRFMessage::none) return;
 
-    ESP_LOGD(TAG, "RF Sending message: 0x%02x for %s", msg, code);
+    ESP_LOGD(TAG, "RF Sending message: 0x%02x for %lx", msg, code);
 
     for (int i = 0; i < rf_repeat_count; i++) {
         switch (msg) {
@@ -177,6 +253,20 @@ void ComputhermQRF::on_pairing() {
     }
 }
 #endif
+
+void ComputhermQRF::publish_sensor_state_(sensor::Sensor *sensor, float value, bool change_only) {
+  if (!sensor || (change_only && sensor->has_state() && sensor->state == value)) {
+    return;
+  }
+  sensor->publish_state(value);
+}
+
+void ComputhermQRF::publish_sensor_state_(text_sensor::TextSensor *sensor, const std::string &value) {
+  if (!sensor || (sensor->has_state() && sensor->state == value)) {
+    return;
+  }
+  sensor->publish_state(value);
+}
 
 }
 }

@@ -43,8 +43,10 @@ STOP length: tick x 7 ... tick x 10 = 1760 ... 2200 us
 #endif
 
 typedef struct{
-  String address;
-  String command;
+  // String address;
+  // String command;
+  unsigned long addr;
+  bool on;
 } computhermMessage;
 
 class ComputhermRF{
@@ -56,11 +58,11 @@ public:
   void startReceiver();
   void stopReceiver();
   bool isDataAvailable();
-  void getData(String &id, bool &on);
+  // void getData(String &id, bool &on);
   computhermMessage getData();
-  void sendMessage(computhermMessage message);
-  void sendMessage(String address, bool on);
-  void pairAddress(String address);
+  // void sendMessage(computhermMessage message);
+  void sendMessage(unsigned long address, bool on);
+  void pairAddress(unsigned long address);
 private:
   static const uint16_t _TICK_LENGTH;
   static const uint16_t _SHORT_MIN;
@@ -83,11 +85,13 @@ private:
   void _sendStop();
   void _sendSync();
   void _sendBit(bool bit);
-  void _sendHalfByte(char ch);
+  // void _sendHalfByte(char ch);
+  void _sendHalfByte(byte num);
   static bool _isRepeat();
   static void _handler();
-  char _toHex(uint8_t num);
-  void _sendMessage(String address, bool on, bool normal_padding);
+  // char _toHex(uint8_t num);
+  // void _sendMessage(String address, bool on, bool normal_padding);
+  void _sendMessage(unsigned long address, bool on, bool normal_padding);
 };
 
 #endif
