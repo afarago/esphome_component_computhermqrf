@@ -36,6 +36,7 @@ class ComputhermQRF : public PollingComponent
 
     void set_receiver_pin(InternalGPIOPin *pin) { this->receiver_pin_ = pin; }
     void set_transmitter_pin(InternalGPIOPin *pin) { this->transmitter_pin_ = pin; }
+    void set_show_extra_debug(bool value) { this->show_extra_debug_ = value; }
 #ifdef USE_COMPUTHERMQRF_UNREGISTERED_ADDR_TEXT_SENSOR
     void set_last_unregistered_address_text_sensor(text_sensor::TextSensor *sensor) { this->last_unregistered_address_text_sensor_ = sensor; }
 #endif
@@ -44,6 +45,7 @@ class ComputhermQRF : public PollingComponent
     InternalGPIOPin *receiver_pin_;
     InternalGPIOPin *transmitter_pin_;
     ComputhermRF *rfhandler_rf;
+    bool show_extra_debug_ = false;
 #ifdef USE_COMPUTHERMQRF_UNREGISTERED_ADDR_TEXT_SENSOR
     std::deque<std::tuple<unsigned long, std::string>> unknown_unit_ids;
 #endif

@@ -128,6 +128,10 @@ void ComputhermQRF::loop() {
                 std::string erraddr = std::string(sensor->getAbbreviation()) + std::string(erraddr_buf);
 
                 ESP_LOGD(TAG, "Message received - Unregistered - thermostat: %lx (%s), command: %d", msg.addr, erraddr.c_str(), msg.on);
+                if (this->show_extra_debug_)
+                    ESP_LOGI(TAG, "Message received - Unregistered - thermostat: %lx (%s), command: %d", msg.addr, erraddr.c_str(), msg.on);
+                else
+                    ESP_LOGD(TAG, "Message received - Unregistered - thermostat: %lx (%s), command: %d", msg.addr, erraddr.c_str(), msg.on);
                 // ESP_LOGD(TAG, "Message received - Unregistered - thermostat: %s, command: %s", 
                 //     msg.address.c_str(), msg.command.c_str());
 
