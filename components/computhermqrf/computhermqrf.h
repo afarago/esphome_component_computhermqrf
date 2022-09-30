@@ -50,8 +50,12 @@ class ComputhermQRF : public PollingComponent
     std::deque<std::tuple<unsigned long, std::string>> unknown_unit_ids;
 #endif
 
+#ifdef USE_SENSOR
     void publish_sensor_state_(sensor::Sensor *sensor, float value, bool change_only = false);
+#endif
+#ifdef USE_TEXT_SENSOR
     void publish_sensor_state_(text_sensor::TextSensor *sensor, const std::string &value);
+#endif
 
   private:
     static const int rf_repeat_count = 4;

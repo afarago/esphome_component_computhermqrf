@@ -62,7 +62,6 @@ void ComputhermQRF::setPairingButton(ComputhermQThermostat_PairingButton *button
 
     // add callback reference
     this->pairing_button->setParentCallback([this](){
-        this->debug_id++;
         this->on_pairing(); 
     });
 }
@@ -258,19 +257,23 @@ void ComputhermQRF::on_pairing() {
 }
 #endif
 
+#ifdef USE_SENSOR
 void ComputhermQRF::publish_sensor_state_(sensor::Sensor *sensor, float value, bool change_only) {
   if (!sensor || (change_only && sensor->has_state() && sensor->state == value)) {
     return;
   }
   sensor->publish_state(value);
 }
+#endif
 
+#ifdef USE_TEXT_SENSOR
 void ComputhermQRF::publish_sensor_state_(text_sensor::TextSensor *sensor, const std::string &value) {
   if (!sensor || (sensor->has_state() && sensor->state == value)) {
     return;
   }
   sensor->publish_state(value);
 }
+#endif
 
 }
 }

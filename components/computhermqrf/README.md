@@ -135,6 +135,12 @@ Connections:
 
 ![module connections](./doc/d1computherm_wiring.jpg "module connections")
 
+### Alternative WEMOS Shield version
+I have created a nice wemos shield as well for my home automation purposes.
+
+![wemos shield](./doc/mini_shield_version.jpg "wemos shield")
+
+
 ## Obtaining Computherm QRF Codes
 Computherm QRF Codes are 5 half byte codes, represented as hex code.
 The codes are randomly generated and assigned upon a pairing process. Without configuring any binary_sensors you still see all ongoing traffic n the debug log. You check which is your zone code before setting up a binary_sensor.
