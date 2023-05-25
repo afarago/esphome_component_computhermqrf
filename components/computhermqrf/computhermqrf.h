@@ -17,6 +17,13 @@ using namespace std;
 namespace esphome {
 namespace computhermqrf {
 
+struct ComputhermQRFData {
+  unsigned long addr;
+  bool on;
+  const char* name;
+  const char* abbrev;
+};
+
 class ComputhermQRF : public PollingComponent 
 #ifdef USE_API
                       , public api::CustomAPIDevice
@@ -41,11 +48,16 @@ class ComputhermQRF : public PollingComponent
     void set_last_unregistered_address_text_sensor(text_sensor::TextSensor *sensor) { this->last_unregistered_address_text_sensor_ = sensor; }
 #endif
 
+  void add_on_code_received_callback(std::function<void(ComputhermQRFData)> callback) {
+    this->data_callback_.add(std::move(callback));
+  }
+
   protected:
     InternalGPIOPin *receiver_pin_;
     InternalGPIOPin *transmitter_pin_;
     ComputhermRF *rfhandler_rf;
     bool show_extra_debug_ = false;
+    CallbackManager<void(ComputhermQRFData)> data_callback_;
 #ifdef USE_COMPUTHERMQRF_UNREGISTERED_ADDR_TEXT_SENSOR
     std::deque<std::tuple<unsigned long, std::string>> unknown_unit_ids;
 #endif
@@ -92,6 +104,13 @@ class ComputhermQRF : public PollingComponent
     unsigned long elapsed(unsigned long now, unsigned long last_update);
     bool has_elapsed(unsigned long since, unsigned long threshold);
 #endif
+};
+
+class ComputhermQRFReceivedCodeTrigger : public Trigger<ComputhermQRFData> {
+ public:
+  explicit ComputhermQRFReceivedCodeTrigger(ComputhermQRF *parent) {
+    parent->add_on_code_received_callback([this](ComputhermQRFData data) { this->trigger(data); });
+  }
 };
 
 }

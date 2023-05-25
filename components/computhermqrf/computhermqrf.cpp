@@ -97,6 +97,21 @@ void ComputhermQRF::loop() {
         computhermMessage msg = rfhandler_rf->getData();
 
         ComputhermQThermostat_BinarySensor* sensor = find_closest_by_id(msg.addr);
+
+        // trigger esphome event value
+        ComputhermQRFData data;
+        data.addr = msg.addr;
+        data.on = msg.on;
+        if (sensor->getCode()==msg.addr) {
+          data.name = sensor->getName();
+          data.abbrev = sensor->getAbbreviation();
+        }
+        if (this->show_extra_debug_) {
+          ESP_LOGI(TAG, "Received ComputhermQRF Code: code=0x%05lX message=%d", data.addr, data.on);
+        }
+        this->data_callback_.call(data);
+
+        // update sensor value
         if (sensor) {
             // find closest - if not found, display hamming distance 56789 => 567>79
             #ifdef USE_COMPUTHERMQRF_BINARY_SENSOR
@@ -126,13 +141,10 @@ void ComputhermQRF::loop() {
                 // adding abbreviation 
                 std::string erraddr = std::string(sensor->getAbbreviation()) + std::string(erraddr_buf);
 
-                ESP_LOGD(TAG, "Message received - Unregistered - thermostat: %lx (%s), command: %d", msg.addr, erraddr.c_str(), msg.on);
                 if (this->show_extra_debug_)
                     ESP_LOGI(TAG, "Message received - Unregistered - thermostat: %lx (%s), command: %d", msg.addr, erraddr.c_str(), msg.on);
                 else
                     ESP_LOGD(TAG, "Message received - Unregistered - thermostat: %lx (%s), command: %d", msg.addr, erraddr.c_str(), msg.on);
-                // ESP_LOGD(TAG, "Message received - Unregistered - thermostat: %s, command: %s", 
-                //     msg.address.c_str(), msg.command.c_str());
 
                 //TODO: create type for computherm_unit_addr
 
