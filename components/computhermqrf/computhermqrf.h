@@ -12,10 +12,11 @@
 
 #include <vector>
 #include <map>
-using namespace std;
 
 namespace esphome {
 namespace computhermqrf {
+
+using namespace std;
 
 struct ComputhermQRFData {
   unsigned long addr;
