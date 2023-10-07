@@ -29,9 +29,9 @@ hex_uint20_t = hex_int_range(min=0, max=1048575)
 computhermqrf_ns = cg.esphome_ns.namespace("computhermqrf")
 ComputhermQRF = computhermqrf_ns.class_("ComputhermQRF", cg.PollingComponent)
 
-ComputhermQRFData = computhermqrf_ns.struct("ComputhermQRFData")
+ComputhermQRFDataRef = computhermqrf_ns.struct("ComputhermQRFData").operator("ref")
 ComputhermQRFReceivedCodeTrigger = computhermqrf_ns.class_(
-    "ComputhermQRFReceivedCodeTrigger", automation.Trigger.template(ComputhermQRFData)
+    "ComputhermQRFReceivedCodeTrigger", automation.Trigger.template(ComputhermQRFDataRef)
 )
 
 CONFIG_SCHEMA = cv.All(
@@ -66,4 +66,4 @@ async def to_code(config):
         cg.add(var.set_transmitter_pin(pin))
     for conf in config.get(CONF_ON_CODE_RECEIVED, []):
         trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
-        await automation.build_automation(trigger, [(ComputhermQRFData, "data")], conf)
+        await automation.build_automation(trigger, [(ComputhermQRFDataRef, "data")], conf)

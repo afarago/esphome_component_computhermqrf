@@ -25,7 +25,7 @@ void ComputhermQThermostat_Switch::write_state(bool state) {
 
 void ComputhermQThermostat_Switch::dump_config() {
   ESP_LOGCONFIG(TAG, "ComputhermQThermostat_Switch:");
-  ESP_LOGCONFIG(TAG, "  Code:'%lx' Name: '%s'", this->getCode(), this->getName());
+  ESP_LOGCONFIG(TAG, "  Code:'%lx' Name: '%s'", this->getCode(), this->getDescription());
   ESP_LOGCONFIG(TAG, "  Resend interval: %d ms", this->config_resend_interval_);
   ESP_LOGCONFIG(TAG, "  Turn on watchdog interval: %d ms", this->config_turn_on_watchdog_interval_);
   LOG_SWITCH("  ", "ComputhermQThermostat_Switch", this);

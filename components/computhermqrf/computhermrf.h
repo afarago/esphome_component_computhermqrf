@@ -43,10 +43,8 @@ STOP length: tick x 7 ... tick x 10 = 1760 ... 2200 us
 #endif
 
 typedef struct{
-  // String address;
-  // String command;
-  unsigned long addr;
-  bool on;
+  unsigned long addr {0};
+  bool on {false};
 } computhermMessage;
 
 class ComputhermRF{

@@ -103,12 +103,14 @@ void ComputhermQRF::loop() {
         data.addr = msg.addr;
         data.on = msg.on;
         if (sensor->getCode()==msg.addr) {
-          data.name = sensor->getName();
+          data.name = sensor->getName().c_str();
           data.abbrev = sensor->getAbbreviation();
         }
-        if (this->show_extra_debug_) {
-          ESP_LOGI(TAG, "Received ComputhermQRF Code: code=0x%05lX message=%d", data.addr, data.on);
-        }
+        if (this->show_extra_debug_)
+          ESP_LOGI(TAG, "Received ComputhermQRF Code - code{0x%05lX} msg{%d}", data.addr, data.on);
+        else 
+          ESP_LOGD(TAG, "Received ComputhermQRF Code - code{0x%05lX} msg{%d}", data.addr, data.on);
+
         this->data_callback_.call(data);
 
         // update sensor value
@@ -117,8 +119,10 @@ void ComputhermQRF::loop() {
             #ifdef USE_COMPUTHERMQRF_BINARY_SENSOR
             if (sensor->getCode()==msg.addr) {
                 sensor->publish_state(msg.on);
-                ESP_LOGD(TAG, "Message received - Registered - description: %s, state: %s", 
-                    sensor->getName(), ComputhermQ_ONOFF(sensor->state));
+                if (this->show_extra_debug_)
+                    ESP_LOGI(TAG, "Message received - Registered - name{%s}, msg{%s}", sensor->getName().c_str(), ComputhermQ_ONOFF(sensor->state));
+                else
+                    ESP_LOGD(TAG, "Message received - Registered - name{%s}, msg{%s}", sensor->getName().c_str(), ComputhermQ_ONOFF(sensor->state));
             } else 
             #endif
             {
@@ -142,9 +146,9 @@ void ComputhermQRF::loop() {
                 std::string erraddr = std::string(sensor->getAbbreviation()) + std::string(erraddr_buf);
 
                 if (this->show_extra_debug_)
-                    ESP_LOGI(TAG, "Message received - Unregistered - thermostat: %lx (%s), command: %d", msg.addr, erraddr.c_str(), msg.on);
+                    ESP_LOGI(TAG, "Message received - Unregistered - addr{%lx (%s)}, cmd{%d}", msg.addr, erraddr.c_str(), msg.on);
                 else
-                    ESP_LOGD(TAG, "Message received - Unregistered - thermostat: %lx (%s), command: %d", msg.addr, erraddr.c_str(), msg.on);
+                    ESP_LOGD(TAG, "Message received - Unregistered - addr{%lx (%s)}, cmd{%d}", msg.addr, erraddr.c_str(), msg.on);
 
                 //TODO: create type for computherm_unit_addr
 
@@ -203,6 +207,7 @@ void ComputhermQRF::update() {
         }        
 
         if (msg != ComputhermRFMessage::none) { 
+            // this will block for 1.3 sec every resend (60s) -- consider xTaskCreatePinnedToCore
             this->send_msg(aswitch->getCode(), msg);
             aswitch->setLastMsgTime(millis());
         }
