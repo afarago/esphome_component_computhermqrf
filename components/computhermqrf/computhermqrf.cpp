@@ -83,9 +83,6 @@ namespace esphome
             ESP_LOGCONFIG(TAG, "ComputhermQRF:");
             LOG_PIN("  Receiver Pin: ", this->receiver_pin_);
             LOG_PIN("  Transmitter Pin: ", this->transmitter_pin_);
-#ifdef USE_COMPUTHERMQRF_UNREGISTERED_ADDR_TEXT_SENSOR
-            LOG_TEXT_SENSOR("  ", "Last Unregistered Address", this->last_unregistered_address_text_sensor_);
-#endif
         }
 
         void ComputhermQRF::setup()
@@ -168,40 +165,6 @@ namespace esphome
                             ESP_LOGI(TAG, "Message received - Unregistered - addr{%lx (%s)}, cmd{%d}", msg.addr, erraddr.c_str(), msg.on);
                         else
                             ESP_LOGD(TAG, "Message received - Unregistered - addr{%lx (%s)}, cmd{%d}", msg.addr, erraddr.c_str(), msg.on);
-
-                            // TODO: create type for computherm_unit_addr
-
-#ifdef USE_COMPUTHERMQRF_UNREGISTERED_ADDR_TEXT_SENSOR
-                        // Handle unregistered address list and sensor
-                        // auto it = std::find(unknown_unit_ids.begin(), unknown_unit_ids.end(), msg.addr);
-                        auto it = std::find_if(unknown_unit_ids.begin(), unknown_unit_ids.end(),
-                                               [&msg](const std::tuple<unsigned long, std::string> &x)
-                                               { return std::get<0>(x) == msg.addr; });
-
-                        if (it != unknown_unit_ids.end())
-                            unknown_unit_ids.erase(it);
-                        // snprintf(erraddr_buf, 11, "!%lx", msg.addr);
-                        unknown_unit_ids.push_front(std::make_tuple(msg.addr, erraddr));
-
-                        // limit max number of storage to 10
-                        if (unknown_unit_ids.size() > max_unregistered_address_to_store)
-                            unknown_unit_ids.resize(max_unregistered_address_to_store);
-
-                        // publish to text sensor
-                        std::string result;
-                        // for (std::pair<std::string, long> element : unknown_unit_ids) {
-                        // std::string s = std::accumulate(v.begin(), v.end(), std::string{});
-                        for (auto it = unknown_unit_ids.begin(); it != unknown_unit_ids.end(); ++it)
-                        {
-                            if (it != unknown_unit_ids.begin())
-                                result += " ";
-                            // char buf[6]; snprintf( buf, 6, "%05lx", *it);
-                            //  result += buf;
-                            result += std::get<1>(*it);
-                        }
-
-                        this->publish_sensor_state_(this->last_unregistered_address_text_sensor_, result);
-#endif // USE_COMPUTHERMQRF_UNREGISTERED_ADDR_TEXT_SENSOR
                     }
                 }
             }
@@ -234,7 +197,7 @@ namespace esphome
 
                 if (msg != ComputhermRFMessage::none)
                 {
-                    // this will block for 1.3 sec every resend (60s) -- consider xTaskCreatePinnedToCore
+                    // this will block for 1.3 sec every resend (60s)
                     this->send_msg(aswitch->getCode(), msg);
                     aswitch->setLastMsgTime(millis());
                 }
