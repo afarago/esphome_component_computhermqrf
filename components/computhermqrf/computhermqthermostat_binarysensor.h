@@ -9,16 +9,18 @@
 
 #include "computhermqthermostat_baseunit.h"
 
-namespace esphome {
-namespace computhermqrf {
+namespace esphome
+{
+  namespace computhermqrf
+  {
 
-class ComputhermQThermostat_BinarySensor : public binary_sensor::BinarySensor, public Component, 
-                                           public ComputhermQThermostat_BaseUnit {
-  public:
-    void dump_config() override;
-};
+    class ComputhermQThermostat_BinarySensor : public binary_sensor::BinarySensor, public Component, public ComputhermQThermostat_BaseUnit
+    {
+    public:
+      void dump_config() override;
+    };
 
+  }
 }
-}
 
-#endif 
+#endif

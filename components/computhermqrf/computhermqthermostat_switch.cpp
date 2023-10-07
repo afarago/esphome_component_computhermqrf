@@ -8,46 +8,52 @@
 #include "computhermqrf_helper.h"
 #include "computhermqthermostat_switch.h"
 
-namespace esphome {
-namespace computhermqrf {
+namespace esphome
+{
+  namespace computhermqrf
+  {
 
-static const char* TAG = "computhermqrf.switch";
+    static const char *TAG = "computhermqrf.switch";
 
-void ComputhermQThermostat_Switch::write_state(bool state) {
-    // This will be called every time the user requests a state change.
-    this->publish_state(state);
-    this->setPendingMessage(this->getMessageBasedOnState());
+    void ComputhermQThermostat_Switch::write_state(bool state)
+    {
+      // This will be called every time the user requests a state change.
+      this->publish_state(state);
+      this->setPendingMessage(this->getMessageBasedOnState());
 
-    if (state) {
-      this->last_turn_on_time_ = millis();
+      if (state)
+      {
+        this->last_turn_on_time_ = millis();
+      }
     }
-}
 
-void ComputhermQThermostat_Switch::dump_config() {
-  ESP_LOGCONFIG(TAG, "ComputhermQThermostat_Switch:");
-  ESP_LOGCONFIG(TAG, "  Code:'%lx' Name: '%s'", this->getCode(), this->getDescription());
-  ESP_LOGCONFIG(TAG, "  Resend interval: %d ms", this->config_resend_interval_);
-  ESP_LOGCONFIG(TAG, "  Turn on watchdog interval: %d ms", this->config_turn_on_watchdog_interval_);
-  LOG_SWITCH("  ", "ComputhermQThermostat_Switch", this);
-}
+    void ComputhermQThermostat_Switch::dump_config()
+    {
+      ESP_LOGCONFIG(TAG, "ComputhermQThermostat_Switch:");
+      ESP_LOGCONFIG(TAG, "  Code:'%lx' Name: '%s'", this->getCode(), this->getDescription());
+      ESP_LOGCONFIG(TAG, "  Resend interval: %d ms", this->config_resend_interval_);
+      ESP_LOGCONFIG(TAG, "  Turn on watchdog interval: %d ms", this->config_turn_on_watchdog_interval_);
+      LOG_SWITCH("  ", "ComputhermQThermostat_Switch", this);
+    }
 
-ComputhermRFMessage ComputhermQThermostat_Switch::popPendingMessage() {
-    ComputhermRFMessage msg = this->pending_msg_;    
-    this->pending_msg_ = ComputhermRFMessage::none;
-    return msg;
-}
+    ComputhermRFMessage ComputhermQThermostat_Switch::popPendingMessage()
+    {
+      ComputhermRFMessage msg = this->pending_msg_;
+      this->pending_msg_ = ComputhermRFMessage::none;
+      return msg;
+    }
 
-void ComputhermQThermostat_Switch::setPendingMessage(ComputhermRFMessage new_message) {
-    this->pending_msg_ = new_message;
-}
+    void ComputhermQThermostat_Switch::setPendingMessage(ComputhermRFMessage new_message)
+    {
+      this->pending_msg_ = new_message;
+    }
 
-ComputhermRFMessage ComputhermQThermostat_Switch::getMessageBasedOnState() {
-    return this->state ?  
-            ComputhermRFMessage::heat_on : 
-            ComputhermRFMessage::heat_off;
-}
+    ComputhermRFMessage ComputhermQThermostat_Switch::getMessageBasedOnState()
+    {
+      return this->state ? ComputhermRFMessage::heat_on : ComputhermRFMessage::heat_off;
+    }
 
-}
+  }
 }
 
 #endif

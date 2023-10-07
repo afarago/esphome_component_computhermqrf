@@ -37,17 +37,19 @@ STOP length: tick x 7 ... tick x 10 = 1760 ... 2200 us
 #define ComputhermRF_h
 
 #if ARDUINO >= 100
- #include "Arduino.h"
+#include "Arduino.h"
 #else
- #include "WProgram.h"
+#include "WProgram.h"
 #endif
 
-typedef struct{
-  unsigned long addr {0};
-  bool on {false};
+typedef struct
+{
+  unsigned long addr{0};
+  bool on{false};
 } computhermMessage;
 
-class ComputhermRF{
+class ComputhermRF
+{
 public:
   const String VERSION = "0.1.3";
   ComputhermRF();
@@ -61,6 +63,7 @@ public:
   // void sendMessage(computhermMessage message);
   void sendMessage(unsigned long address, bool on);
   void pairAddress(unsigned long address);
+
 private:
   static const uint16_t _TICK_LENGTH;
   static const uint16_t _SHORT_MIN;

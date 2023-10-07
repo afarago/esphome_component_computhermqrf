@@ -18,10 +18,11 @@ CONFIG_SCHEMA = cv.Schema(
     {
         cv.GenerateID(CONF_ComputhermQRF_ID): cv.use_id(ComputhermQRF),
         cv.Optional(CONF_LAST_UNREGISTERED_ADDRESS): text_sensor.text_sensor_schema(
-            #icon=ICON_ACCURACY
+            # icon=ICON_ACCURACY
         ),
     }
 )
+
 
 async def setup_conf(config, key, hub):
     if key in config:
@@ -30,8 +31,9 @@ async def setup_conf(config, key, hub):
         # await cg.register_component(var, conf)
         cg.add(getattr(hub, f"set_{key}_text_sensor")(sens))
 
+
 async def to_code(config):
     hub = await cg.get_variable(config[CONF_ComputhermQRF_ID])
     for key in TYPES:
         await setup_conf(config, key, hub)
-    cg.add_define("USE_COMPUTHERMQRF_UNREGISTERED_ADDR_TEXT_SENSOR")        
+    cg.add_define("USE_COMPUTHERMQRF_UNREGISTERED_ADDR_TEXT_SENSOR")

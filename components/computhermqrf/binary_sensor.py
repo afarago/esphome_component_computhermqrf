@@ -9,29 +9,33 @@ from . import (
 
 DEPENDENCIES = ["computhermqrf"]
 
-ComputhermQRF_BinarySensor = computhermqrf_ns.class_("ComputhermQThermostat_BinarySensor", binary_sensor.BinarySensor, cg.Component)
+ComputhermQRF_BinarySensor = computhermqrf_ns.class_(
+    "ComputhermQThermostat_BinarySensor", binary_sensor.BinarySensor, cg.Component)
+
 
 def validate_config(config):
     # todo: sould not allow binary_sensor if receiver_pin is not registered
     return config
 
+
 CONFIG_SCHEMA = cv.All(
     binary_sensor.BINARY_SENSOR_SCHEMA.extend(
-    {
-        cv.GenerateID(): cv.declare_id(ComputhermQRF_BinarySensor),
-        cv.GenerateID(CONF_ComputhermQRF_ID): cv.use_id(ComputhermQRF),
-        cv.Required(CONF_CODE): hex_uint20_t,
-        # cv.Required(CONF_CODE): cv.string,
-        cv.Optional(CONF_ABBREVIATION): cv.string,
-        cv.Optional(
-            CONF_DEVICE_CLASS, default=DEVICE_CLASS_RUNNING
-        ): binary_sensor.validate_device_class,
-        cv.Optional(
-            CONF_ICON, default=ICON_THERMOMETER
-        ): cv.icon
-    }), 
+        {
+            cv.GenerateID(): cv.declare_id(ComputhermQRF_BinarySensor),
+            cv.GenerateID(CONF_ComputhermQRF_ID): cv.use_id(ComputhermQRF),
+            cv.Required(CONF_CODE): hex_uint20_t,
+            # cv.Required(CONF_CODE): cv.string,
+            cv.Optional(CONF_ABBREVIATION): cv.string,
+            cv.Optional(
+                CONF_DEVICE_CLASS, default=DEVICE_CLASS_RUNNING
+            ): binary_sensor.validate_device_class,
+            cv.Optional(
+                CONF_ICON, default=ICON_THERMOMETER
+            ): cv.icon
+        }),
     validate_config,
 )
+
 
 async def to_code(config):
     hub = await cg.get_variable(config[CONF_ComputhermQRF_ID])
@@ -46,6 +50,6 @@ async def to_code(config):
     cg.add(var.setCode(config[CONF_CODE]))
     if CONF_ABBREVIATION in config:
         cg.add(var.setAbbreviation(config[CONF_ABBREVIATION]))
-    
+
     cg.add(hub.addSensor(var))
     cg.add_define("USE_COMPUTHERMQRF_BINARY_SENSOR")
