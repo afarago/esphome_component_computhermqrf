@@ -106,20 +106,20 @@ computhermMessage ComputhermRF::getData()
   _avail = false;
   return result;
 }
-// void ComputhermRF::sendMessage(computhermMessage message) {
-//   sendMessage(message.address, message.command == "ON");
-// }
+
 void ComputhermRF::sendMessage(unsigned long address, bool on)
 {
   _sendMessage(address, on, true);
 }
-// void ComputhermRF::_sendMessage(String address, bool on, bool normal_padding) {
-//   if (address.length() != 5)
-//     return;
-//   //!! _sendMessage(address_numeric, on, normal_padding);
-// }
+
 void ComputhermRF::_sendMessage(unsigned long address, bool on, bool normal_padding)
 {
+  // _sendMessage timing
+  // bit = pulse_w = 3*tick / halfbyte = 4* bit = 12*tick / 5*halfbyte = 60*tick
+  // [j]repeat - 2x => 120 tick + sync (12 tick) = 132 tick
+  // [i] repeat 8 times - 1056 ticks
+  // 1 cycle = 232 ms
+
   _wakeUpTransmitter();
   stopReceiver();
   for (int i = 0; i < 8; i++)
@@ -217,23 +217,6 @@ void ComputhermRF::_sendBit(bool bit)
     _sendPulse(2, 1); // 001
   }
 }
-// void ComputhermRF::_sendHalfByte(char ch) {
-//   uint8_t num = 0;
-//   if (ch >= '0' && ch <= '9') {
-//     num = ch - '0';
-//   } else {
-//     if (ch >= 'a' && ch <= 'f') {
-//       num = ch - 'a' + 10;
-//     } else {
-//       if (ch >= 'A' && ch <= 'F') {
-//         num = ch - 'A' + 10;
-//       } else {
-//         return;
-//       }
-//     }
-//   }
-//   _sendHalfByte(num);
-// }
 
 void ComputhermRF::_sendHalfByte(byte num)
 {
@@ -314,10 +297,3 @@ void ICACHE_RAM_ATTR ComputhermRF::_handler()
     }
   }
 }
-// char ComputhermRF::_toHex(uint8_t num) {
-//   if (num < 10) {
-//     return '0' + num;
-//   } else {
-//     return 'A' + (num - 10);
-//   }
-// }
