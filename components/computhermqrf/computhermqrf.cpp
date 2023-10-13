@@ -103,6 +103,9 @@ namespace esphome
 
         void ComputhermQRF::loop()
         {
+            // check if sending iteration is needed
+            rfhandler_rf->sending_loop();
+
             if (rfhandler_rf->isDataAvailable())
             {
                 computhermMessage msg = rfhandler_rf->getData();
@@ -197,7 +200,6 @@ namespace esphome
 
                 if (msg != ComputhermRFMessage::none)
                 {
-                    // this will block for 1.3 sec every resend (60s)
                     this->send_msg(aswitch->getCode(), msg);
                     aswitch->setLastMsgTime(millis());
                 }
@@ -247,21 +249,17 @@ namespace esphome
 
             ESP_LOGD(TAG, "RF Sending message: 0x%02x for %lx", msg, code);
 
-            for (int i = 0; i < rf_repeat_count; i++)
+            switch (msg)
             {
-                switch (msg)
-                {
-                case ComputhermRFMessage::heat_on:
-                case ComputhermRFMessage::heat_off:
-                    rfhandler_rf->sendMessage(code, msg == ComputhermRFMessage::heat_on);
-                    break;
-                case ComputhermRFMessage::pairing:
-                    rfhandler_rf->pairAddress(code);
-                    break;
-                default:
-                    break;
-                }
-                yield();
+            case ComputhermRFMessage::heat_on:
+            case ComputhermRFMessage::heat_off:
+                rfhandler_rf->sendMessage(code, msg == ComputhermRFMessage::heat_on);
+                break;
+            case ComputhermRFMessage::pairing:
+                rfhandler_rf->pairAddress(code);
+                break;
+            default:
+                break;
             }
         }
 

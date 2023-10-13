@@ -17,7 +17,7 @@ namespace esphome
     void ComputhermQThermostat_BinarySensor::dump_config()
     {
       ESP_LOGCONFIG(TAG, "ComputhermQThermostat_BinarySensor:");
-      ESP_LOGCONFIG(TAG, "  code:'%lx' name: '%s'", this->getCode(), this->getDescription());
+      ESP_LOGCONFIG(TAG, "  code:'%lx' name: '%s'", this->getCode(), this->getName());
       LOG_BINARY_SENSOR("  ", "ComputhermQThermostat_BinarySensor", this);
     }
 

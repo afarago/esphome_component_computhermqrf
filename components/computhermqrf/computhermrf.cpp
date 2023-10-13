@@ -12,6 +12,7 @@ const uint16_t ComputhermRF::_STOP_MAX = _TICK_LENGTH * 10;   // 2200
 const uint16_t ComputhermRF::_BUFF_SIZE = 70;
 const uint16_t ComputhermRF::_MSG_LENGTH = 56;
 
+bool ComputhermRF::_isReceiving = false;
 uint8_t ComputhermRF::_inputPin;
 uint8_t ComputhermRF::_outputPin;
 volatile bool ComputhermRF::_avail;
@@ -50,11 +51,13 @@ void ComputhermRF::startReceiver()
     _buffEnd = 0;
     _lastMessageArrived = 0;
     attachInterrupt(digitalPinToInterrupt(_inputPin), _handler, CHANGE);
+    _isReceiving = true;
   }
 }
 void ComputhermRF::stopReceiver()
 {
   detachInterrupt(digitalPinToInterrupt(_inputPin));
+  _isReceiving = false;
 }
 bool ComputhermRF::isDataAvailable()
 {
@@ -112,7 +115,23 @@ void ComputhermRF::sendMessage(unsigned long address, bool on)
   _sendMessage(address, on, true);
 }
 
+computhermMessage sending_message;
+int sending_remaining_counter = 0;
+void ComputhermRF::sending_loop()
+{
+  if (sending_remaining_counter > 0)
+    _sendMessage_iteration();
+}
 void ComputhermRF::_sendMessage(unsigned long address, bool on, bool normal_padding)
+{
+  _wakeUpTransmitter();
+  stopReceiver();
+  sending_remaining_counter = 16;
+  sending_message = {.addr = address, .on = on, .normal_padding = normal_padding};
+  _sendMessage_iteration();
+}
+
+void ComputhermRF::_sendMessage_iteration()
 {
   // _sendMessage timing
   // bit = pulse_w = 3*tick / halfbyte = 4* bit = 12*tick / 5*halfbyte = 60*tick
@@ -120,51 +139,50 @@ void ComputhermRF::_sendMessage(unsigned long address, bool on, bool normal_padd
   // [i] repeat 8 times - 1056 ticks
   // 1 cycle = 232 ms
 
-  _wakeUpTransmitter();
-  stopReceiver();
-  for (int i = 0; i < 8; i++)
+  _sendSync();
+  for (int j = 0; j < 2; j++)
   {
-    _sendSync();
-    for (int j = 0; j < 2; j++)
+    // 16+8 bits
+    // CHECK if address last halfbyte is 8?
+    for (int k = 0; k < 5; k++)
     {
-      // 16+8 bits
-      // CHECK if address last halfbyte is 8?
-      for (int k = 0; k < 5; k++)
-      {
-        // 0x56789 -> 5,6,7,8,9
-        byte hb = (address >> (5 - 1 - k) * 4) & 0xF;
-        // _sendHalfByte(address[k]);
-        _sendHalfByte(hb);
-      }
-
-      // COMMAND: 4+4 bits
-      //(CClib: TURN_ON_HEATING = 0xFF) --> "00" to send
-      //(CClib:TURN_OFF_HEATING = 0x0F) --> "F0" to send
-      //(CClib:PAIR = 0x00) --> "FF" to send
-      if (on)
-      {
-        //_sendHalfByte('0');  // ON
-        _sendHalfByte(0x0); // ON
-      }
-      else
-      {
-        // _sendHalfByte('F');  // OFF
-        _sendHalfByte(0xF); // OFF
-      }
-      if (normal_padding)
-      {
-        // _sendHalfByte('0');  // default padding for ON/OFF - ON
-        _sendHalfByte(0x0); // default padding for ON/OFF - ON
-      }
-      else
-      {
-        // _sendHalfByte('F');  // padding for pairing - OFF
-        _sendHalfByte(0xF); // padding for pairing - OFF
-      }
+      // 0x56789 -> 5,6,7,8,9
+      byte hb = (sending_message.addr >> (5 - 1 - k) * 4) & 0xF;
+      // _sendHalfByte(address[k]);
+      _sendHalfByte(hb);
     }
-    _sendStop();
+
+    // COMMAND: 4+4 bits
+    //(CClib: TURN_ON_HEATING = 0xFF) --> "00" to send
+    //(CClib:TURN_OFF_HEATING = 0x0F) --> "F0" to send
+    //(CClib:PAIR = 0x00) --> "FF" to send
+    if (sending_message.on)
+    {
+      //_sendHalfByte('0');  // ON
+      _sendHalfByte(0x0); // ON
+    }
+    else
+    {
+      // _sendHalfByte('F');  // OFF
+      _sendHalfByte(0xF); // OFF
+    }
+    if (sending_message.normal_padding)
+    {
+      // _sendHalfByte('0');  // default padding for ON/OFF - ON
+      _sendHalfByte(0x0); // default padding for ON/OFF - ON
+    }
+    else
+    {
+      // _sendHalfByte('F');  // padding for pairing - OFF
+      _sendHalfByte(0xF); // padding for pairing - OFF
+    }
   }
-  startReceiver();
+  _sendStop();
+
+  if (--sending_remaining_counter <= 0)
+  {
+    startReceiver();
+  }
 }
 void ComputhermRF::pairAddress(unsigned long address)
 {
@@ -245,6 +263,7 @@ bool ComputhermRF::_isRepeat()
   _lastMessageArrived = millis();
   return result;
 }
+
 void ICACHE_RAM_ATTR ComputhermRF::_handler()
 {
   static uint32_t lastMs = 0, currMs, diffMs;

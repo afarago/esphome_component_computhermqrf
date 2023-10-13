@@ -46,6 +46,7 @@ typedef struct
 {
   unsigned long addr{0};
   bool on{false};
+  bool normal_padding{true};
 } computhermMessage;
 
 class ComputhermRF
@@ -63,6 +64,7 @@ public:
   // void sendMessage(computhermMessage message);
   void sendMessage(unsigned long address, bool on);
   void pairAddress(unsigned long address);
+  void sending_loop();
 
 private:
   static const uint16_t _TICK_LENGTH;
@@ -81,17 +83,16 @@ private:
   static volatile byte _buffEnd;
   static byte _lastBuff[];
   static uint32_t _lastMessageArrived;
+  static bool _isReceiving;
   void _wakeUpTransmitter();
   void _sendPulse(uint8_t lowTime, uint8_t highTime);
   void _sendStop();
   void _sendSync();
   void _sendBit(bool bit);
-  // void _sendHalfByte(char ch);
   void _sendHalfByte(byte num);
   static bool _isRepeat();
   static void _handler();
-  // char _toHex(uint8_t num);
-  // void _sendMessage(String address, bool on, bool normal_padding);
+  void _sendMessage_iteration();
   void _sendMessage(unsigned long address, bool on, bool normal_padding);
 };
 

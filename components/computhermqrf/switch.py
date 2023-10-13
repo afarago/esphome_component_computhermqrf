@@ -33,7 +33,7 @@ CONFIG_SCHEMA = cv.All(
             # cv.Required(CONF_CODE): cv.string,
             cv.Optional(CONF_ABBREVIATION): cv.string,
             cv.Optional(CONF_TURN_ON_WATCHDOG_INTERVAL, default="30min"): cv.positive_time_period_milliseconds,
-            cv.Optional(CONF_RESEND_INTERVAL, default="1min"): cv.positive_time_period_milliseconds,
+            cv.Optional(CONF_RESEND_INTERVAL, default="30sec"): cv.positive_time_period_milliseconds,
             cv.Optional(
                 CONF_ICON, default=ICON_THERMOMETER_LINES
             ): cv.icon
