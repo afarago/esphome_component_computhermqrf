@@ -6,7 +6,8 @@ HW requirements:
 - RF Receiver: HopeRF RFM217W-868S1
 
 Note1: please be aware that the mentioned RF modules are not 5V ones.
-Note2: maybe other receiver/transmitter modiel are also fine but a few important things needed: 868.35 MHz frequency, ASK OOK modulation, simple 1 pin interface.
+Note2: maybe other receiver/transmitter modiel are also fine but a few important things needed: 868.35 MHz frequency,
+ASK OOK modulation, simple 1 pin interface.
 
 Modulation details:
 
@@ -42,16 +43,14 @@ STOP length: tick x 7 ... tick x 10 = 1760 ... 2200 us
 #include "WProgram.h"
 #endif
 
-typedef struct
-{
+typedef struct {
   unsigned long addr{0};
   bool on{false};
   bool normal_padding{true};
 } computhermMessage;
 
-class ComputhermRF
-{
-public:
+class ComputhermRF {
+ public:
   const String VERSION = "0.1.3";
   ComputhermRF();
   ComputhermRF(uint8_t inputPin, uint8_t outputPin);
@@ -66,7 +65,7 @@ public:
   void pairAddress(unsigned long address);
   void sending_loop();
 
-private:
+ private:
   static const uint16_t _TICK_LENGTH;
   static const uint16_t _SHORT_MIN;
   static const uint16_t _LONG_MIN;
