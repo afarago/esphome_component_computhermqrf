@@ -1,16 +1,28 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import binary_sensor
-from esphome.const import CONF_DEVICE_CLASS, DEVICE_CLASS_RUNNING, CONF_ID, CONF_CODE, CONF_NAME, CONF_ICON, ICON_THERMOMETER
+from esphome.const import (
+    CONF_DEVICE_CLASS,
+    DEVICE_CLASS_RUNNING,
+    CONF_ID,
+    CONF_CODE,
+    CONF_NAME,
+    CONF_ICON,
+    ICON_THERMOMETER,
+)
 from . import (
-    computhermqrf_ns, ComputhermQRF, CONF_ComputhermQRF_ID, hex_uint20_t,
-    CONF_ABBREVIATION
+    computhermqrf_ns,
+    ComputhermQRF,
+    CONF_ComputhermQRF_ID,
+    hex_uint20_t,
+    CONF_ABBREVIATION,
 )
 
 DEPENDENCIES = ["computhermqrf"]
 
 ComputhermQRF_BinarySensor = computhermqrf_ns.class_(
-    "ComputhermQThermostat_BinarySensor", binary_sensor.BinarySensor, cg.Component)
+    "ComputhermQThermostat_BinarySensor", binary_sensor.BinarySensor, cg.Component
+)
 
 
 def validate_config(config):
@@ -28,10 +40,9 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(
                 CONF_DEVICE_CLASS, default=DEVICE_CLASS_RUNNING
             ): binary_sensor.validate_device_class,
-            cv.Optional(
-                CONF_ICON, default=ICON_THERMOMETER
-            ): cv.icon
-        }),
+            cv.Optional(CONF_ICON, default=ICON_THERMOMETER): cv.icon,
+        }
+    ),
     validate_config,
 )
 

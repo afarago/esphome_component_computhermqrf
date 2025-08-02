@@ -8,18 +8,19 @@ from . import computhermqrf_ns, ComputhermQRF, CONF_ComputhermQRF_ID
 DEPENDENCIES = ["computhermqrf"]
 
 ComputhermQRF_Button = computhermqrf_ns.class_(
-    "ComputhermQThermostat_PairingButton", button.Button, cg.Component)
+    "ComputhermQThermostat_PairingButton", button.Button, cg.Component
+)
 
 CONF_MODE_PAIRING = "pair"
 
 # TODO: allow pairing button only if Switches are enabled, otherwise fail
 
-CONFIG_SCHEMA = \
-    button.button_schema(ComputhermQRF_Button).extend(
-        {
-            cv.GenerateID(CONF_ComputhermQRF_ID): cv.use_id(ComputhermQRF),
-            cv.Required(CONF_MODE): cv.one_of(CONF_MODE_PAIRING)
-        })
+CONFIG_SCHEMA = button.button_schema(ComputhermQRF_Button).extend(
+    {
+        cv.GenerateID(CONF_ComputhermQRF_ID): cv.use_id(ComputhermQRF),
+        cv.Required(CONF_MODE): cv.one_of(CONF_MODE_PAIRING),
+    }
+)
 
 
 async def to_code(config):

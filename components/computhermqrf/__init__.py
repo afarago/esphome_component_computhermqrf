@@ -7,11 +7,6 @@ from esphome import pins
 from esphome.components import binary_sensor, switch
 from esphome.const import (
     CONF_ID,
-    CONF_NUM_ATTEMPTS,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_REBOOT_TIMEOUT,
-    CONF_SAFE_MODE,
     CONF_TRIGGER_ID,
 )
 from esphome.core import CORE, coroutine_with_priority
@@ -31,11 +26,12 @@ ComputhermQRF = computhermqrf_ns.class_("ComputhermQRF", cg.PollingComponent)
 
 ComputhermQRFDataRef = computhermqrf_ns.struct("ComputhermQRFData").operator("ref")
 ComputhermQRFReceivedCodeTrigger = computhermqrf_ns.class_(
-    "ComputhermQRFReceivedCodeTrigger", automation.Trigger.template(ComputhermQRFDataRef)
+    "ComputhermQRFReceivedCodeTrigger",
+    automation.Trigger.template(ComputhermQRFDataRef),
 )
 
 CONFIG_SCHEMA = cv.All(
-        cv.Schema(
+    cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(ComputhermQRF),
             cv.Optional(CONF_RECEIVER_PIN): pins.gpio_input_pin_schema,
@@ -46,18 +42,19 @@ CONFIG_SCHEMA = cv.All(
                         ComputhermQRFReceivedCodeTrigger
                     ),
                 }
-            ),            
+            ),
         }
     )
     .extend(cv.COMPONENT_SCHEMA)
     .extend(cv.polling_component_schema("1s")),
-    cv.has_at_least_one_key(CONF_RECEIVER_PIN, CONF_TRANSMITTER_PIN)
+    cv.has_at_least_one_key(CONF_RECEIVER_PIN, CONF_TRANSMITTER_PIN),
 )
+
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
-    
+
     if CONF_RECEIVER_PIN in config:
         pin = await cg.gpio_pin_expression(config[CONF_RECEIVER_PIN])
         cg.add(var.set_receiver_pin(pin))
@@ -66,4 +63,6 @@ async def to_code(config):
         cg.add(var.set_transmitter_pin(pin))
     for conf in config.get(CONF_ON_CODE_RECEIVED, []):
         trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
-        await automation.build_automation(trigger, [(ComputhermQRFDataRef, "data")], conf)
+        await automation.build_automation(
+            trigger, [(ComputhermQRFDataRef, "data")], conf
+        )
