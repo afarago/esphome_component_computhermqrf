@@ -15,9 +15,8 @@ CONF_MODE_PAIRING = "pair"
 # TODO: allow pairing button only if Switches are enabled, otherwise fail
 
 CONFIG_SCHEMA = \
-    button.BUTTON_SCHEMA.extend(
+    button.button_schema(ComputhermQRF_Button).extend(
         {
-            cv.GenerateID(): cv.declare_id(ComputhermQRF_Button),
             cv.GenerateID(CONF_ComputhermQRF_ID): cv.use_id(ComputhermQRF),
             cv.Required(CONF_MODE): cv.one_of(CONF_MODE_PAIRING)
         })

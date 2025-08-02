@@ -19,9 +19,8 @@ def validate_config(config):
 
 
 CONFIG_SCHEMA = cv.All(
-    binary_sensor.BINARY_SENSOR_SCHEMA.extend(
+    binary_sensor.binary_sensor_schema(ComputhermQRF_BinarySensor).extend(
         {
-            cv.GenerateID(): cv.declare_id(ComputhermQRF_BinarySensor),
             cv.GenerateID(CONF_ComputhermQRF_ID): cv.use_id(ComputhermQRF),
             cv.Required(CONF_CODE): hex_uint20_t,
             # cv.Required(CONF_CODE): cv.string,

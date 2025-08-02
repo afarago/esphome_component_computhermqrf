@@ -25,9 +25,8 @@ def validate_config(config):
 
 
 CONFIG_SCHEMA = cv.All(
-    switch.SWITCH_SCHEMA.extend(
+    switch.switch_schema(ComputhermQRF_Switch).extend(
         {
-            cv.GenerateID(): cv.declare_id(ComputhermQRF_Switch),
             cv.GenerateID(CONF_ComputhermQRF_ID): cv.use_id(ComputhermQRF),
             cv.Required(CONF_CODE): cv.templatable(hex_uint20_t),
             # cv.Required(CONF_CODE): cv.string,
